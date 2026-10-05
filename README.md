@@ -4,6 +4,10 @@ An orb circles a ring. Tap when it passes through the glowing gate. Each hit fli
 
 Built with **Expo SDK 57 / React Native 0.86** (new architecture) from one TypeScript codebase for **Android and iOS**. It's a 1:1 implementation of the _One-Tap Game App_ design canvas: dark ground, lime accent, Unbounded + Manrope.
 
+## Screenshots
+
+<p><img src="docs/screenshots/home.png" width="180" alt="Home"> <img src="docs/screenshots/gameplay.png" width="180" alt="Gameplay"> <img src="docs/screenshots/missed.png" width="180" alt="Missed"> <img src="docs/screenshots/results.png" width="180" alt="Results"> <img src="docs/screenshots/skins.png" width="180" alt="Skins"> <img src="docs/screenshots/ranks.png" width="180" alt="Ranks"> <img src="docs/screenshots/settings.png" width="180" alt="Settings"> <img src="docs/screenshots/shop.png" width="180" alt="Shop"></p>
+
 ## Features
 
 - **60/120 fps gameplay on the UI thread.** The physics step (sub-stepped, so the orb can't skip past a gate) and tap resolution run as Reanimated worklets. Rendering is GPU-accelerated with Skia. React doesn't re-render during play.
