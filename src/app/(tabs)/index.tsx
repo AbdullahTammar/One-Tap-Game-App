@@ -82,10 +82,10 @@ const styles = StyleSheet.create({
   header: { justifyContent: 'space-between', height: 44 },
   ringWrap: { alignItems: 'center', paddingTop: 6 },
   ringCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 4 },
-  best: { fontFamily: fonts.display, fontSize: 52, lineHeight: 58 },
+  best: { fontFamily: fonts.display, fontSize: 52, lineHeight: 58, color: colors.text },
   copy: { gap: 10 },
   center: { textAlign: 'center' },
   grid: { flexDirection: 'row', gap: 12 },
   stat: { flex: 1, gap: 6 },
-  cardValue: { fontFamily: fonts.displaySemi, fontSize: 20 },
+  cardValue: { fontFamily: fonts.displaySemi, fontSize: 20, color: colors.text },
 });

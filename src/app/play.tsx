@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   bestBox: { alignItems: 'center', gap: 2 },
-  bestValue: { fontFamily: fonts.display, fontSize: 18 },
+  bestValue: { fontFamily: fonts.display, fontSize: 18, color: colors.text },
   level: {
     height: 36,
     minWidth: 44,
