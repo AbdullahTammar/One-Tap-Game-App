@@ -8,7 +8,7 @@ import type { GameFx } from '../game/useGameEngine';
 import type { Skin } from '../game/skins';
 import { colors } from '../theme';
 
-interface Props {
+export interface SkiaRingProps {
   size: number;
   state: SharedValue<GameState>;
   fx: GameFx;
@@ -23,11 +23,13 @@ const RAD2DEG = 180 / Math.PI;
  * GPU-rendered ring. Everything animated is a derived value read on the UI
  * thread, so React never re-renders during play.
  */
-export function GameCanvas({ size, state, fx, accent, skin }: Props) {
+export default function SkiaRing({ size, state, fx, accent, skin }: SkiaRingProps) {
   const k = size / RING.view;
   const { center: c, radius: r, stroke } = RING;
   const oval = useMemo(() => Skia.XYWHRect(c - r, c - r, r * 2, r * 2), [c, r]);
-  const transform = useMemo(() => [{ scale: k }], [k]);
+  // Overflow room so hit shockwaves near the ring's edge are not clipped.
+  const pad = Math.round(size * 0.2);
+  const transform = useMemo(() => [{ translateX: pad }, { translateY: pad }, { scale: k }], [k, pad]);
 
   const gatePath = usePathValue((b) => {
     'worklet';
@@ -60,7 +62,10 @@ export function GameCanvas({ size, state, fx, accent, skin }: Props) {
   const shakeTransform = useDerivedValue(() => [{ translateX: fx.shake.value }]);
 
   return (
-    <Canvas style={{ width: size, height: size }}>
+    <Canvas
+      pointerEvents="none"
+      style={{ position: 'absolute', left: -pad, top: -pad, width: size + pad * 2, height: size + pad * 2 }}
+    >
       <Group transform={shakeTransform}>
         <Group transform={transform}>
           <Circle cx={c} cy={c} r={r} style="stroke" strokeWidth={stroke} color={colors.track} />
