@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   hero: { alignItems: 'center', gap: 8, paddingTop: 28 },
   stats: { flexDirection: 'row', gap: 10 },
   stat: { flex: 1, alignItems: 'center', gap: 6, paddingHorizontal: 12 },
-  statValue: { fontFamily: fonts.display, fontSize: 20 },
+  statValue: { fontFamily: fonts.display, fontSize: 20, color: colors.text },
   inline: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   actions: { marginTop: 'auto', gap: 12 },
 });

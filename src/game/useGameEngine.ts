@@ -51,6 +51,8 @@ function shakeAnimation() {
   );
 }
 
+const TAP_DEBOUNCE_MS = 80;
+
 const newSeed = () => (Math.random() * 0x7fffffff) | 0;
 
 /**
@@ -64,6 +66,7 @@ export function useGameEngine(onEvent: (event: GameEvent, state: GameState) => v
   const pulseAngle = useSharedValue(0);
   const shake = useSharedValue(0);
   const scoreScale = useSharedValue(1);
+  const lastTap = useSharedValue(0);
 
   // Stable trampoline so worklets never capture a stale handler.
   const handlerRef = useRef(onEvent);
@@ -86,6 +89,10 @@ export function useGameEngine(onEvent: (event: GameEvent, state: GameState) => v
 
   const tapWorklet = useCallback(() => {
     'worklet';
+    // One physical tap can surface as two begin events (e.g. touch + mouse on web).
+    const now = Date.now();
+    if (now - lastTap.get() < TAP_DEBOUNCE_MS) return;
+    lastTap.set(now);
     const prev = state.get();
     const { state: next, event } = tapEngine(prev);
     if (!event) return;
@@ -99,7 +106,7 @@ export function useGameEngine(onEvent: (event: GameEvent, state: GameState) => v
       shake.set(shakeAnimation());
     }
     scheduleOnRN(emit, event, next);
-  }, [emit, pulse, pulseAngle, scoreScale, shake, state]);
+  }, [emit, lastTap, pulse, pulseAngle, scoreScale, shake, state]);
 
   const gesture = useMemo(
     () =>

@@ -125,9 +125,9 @@ const styles = StyleSheet.create({
   content: { gap: 16, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 32 },
   header: { height: 44 },
   current: { gap: 18, padding: 20, borderRadius: 28 },
-  big: { fontFamily: fonts.display, fontSize: 28 },
+  big: { fontFamily: fonts.display, fontSize: 28, color: colors.text },
   statsRow: { flexDirection: 'row', gap: 10 },
   mini: { flex: 1, alignItems: 'center', gap: 6 },
-  miniValue: { fontFamily: fonts.display, fontSize: 20 },
+  miniValue: { fontFamily: fonts.display, fontSize: 20, color: colors.text },
   pos: { fontFamily: fonts.display, fontSize: 15, width: 24, color: colors.textFaint },
 });
