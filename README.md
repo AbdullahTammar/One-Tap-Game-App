@@ -1,18 +1,23 @@
-# Lumo: One-Tap Orbit Game
+# Lumo: The Circle Collection
 
-An orb circles a ring. Tap when it passes through the glowing gate. Each hit flips its direction, speeds it up and shrinks the gate. Miss, or let it slip past, and the run ends.
+Four circle games, one tap: Gate Runner (the original), Pulse, Orbit Switch, and Dot Lock. Choose a game from the library and build a separate personal best in each. See [the collection guide](docs/CIRCLE_COLLECTION.md) for controls and screenshots.
 
 Built with **Expo SDK 57 / React Native 0.86** (new architecture) from one TypeScript codebase for **Android and iOS**. It's a 1:1 implementation of the _One-Tap Game App_ design canvas: dark ground, lime accent, Unbounded + Manrope.
 
-## Screenshots
+## Circle collection
+
+<p><img src="docs/screenshots/circle-games.jpg" width="180" alt="Circle game library"> <img src="docs/screenshots/pulse.jpg" width="180" alt="Pulse"> <img src="docs/screenshots/orbit-switch.jpg" width="180" alt="Orbit Switch"> <img src="docs/screenshots/dot-lock.jpg" width="180" alt="Dot Lock"></p>
+
+## Original game screenshots
 
 <p><img src="docs/screenshots/home.png" width="180" alt="Home"> <img src="docs/screenshots/gameplay.png" width="180" alt="Gameplay"> <img src="docs/screenshots/missed.png" width="180" alt="Missed"> <img src="docs/screenshots/results.png" width="180" alt="Results"> <img src="docs/screenshots/skins.png" width="180" alt="Skins"> <img src="docs/screenshots/ranks.png" width="180" alt="Ranks"> <img src="docs/screenshots/settings.png" width="180" alt="Settings"> <img src="docs/screenshots/shop.png" width="180" alt="Shop"></p>
 
 ## Features
 
-- **60/120 fps gameplay on the UI thread.** The physics step (sub-stepped, so the orb can't skip past a gate) and tap resolution run as Reanimated worklets. Rendering is GPU-accelerated with Skia. React doesn't re-render during play.
-- **Taps register on touch-down** for near-zero input latency, with haptics and synthesized original SFX.
-- **Screens:** Home (best, streak, daily goal), Gameplay (pause, levels, speed, Missed! sheet), Results (stats, next unlock, continue / double coins), Skins shop (12 orbs, coin unlocks), Ranks (7-tier ladder, personal top 10, lifetime stats), Settings (sound, haptics, accent theme, store, privacy), Coin Shop.
+- **Gate Runner: 60/120 fps gameplay on the UI thread.** The physics step (sub-stepped, so the orb can't skip past a gate) and tap resolution run as Reanimated worklets. Rendering is GPU-accelerated with Skia. React doesn't re-render during play.
+- **Gate Runner taps register on touch-down** for near-zero input latency, with haptics and synthesized original SFX.
+- **Circle arcade:** Three additional SVG games with frame-based timing, persistent personal bests, pause/resume, instant retries, and equipped orb skins. Gate Runner retains its existing coins, ranks, and daily goals.
+- **Screens:** Game library (four games, bests, Gate Runner streak and daily goal), Gameplay (pause, levels, speed, Missed! sheet), Results (stats, next unlock, continue / double coins), Skins shop (12 orbs, coin unlocks), Ranks (7-tier ladder, personal top 10, lifetime stats), Settings (sound, haptics, accent theme, store, privacy), Coin Shop.
 - **Monetization:** AdMob rewarded and interstitial ads with consent (UMP) and ATT, plus RevenueCat IAP (Remove Ads, Starter Pack, coin packs). See [`docs/MONETIZATION.md`](docs/MONETIZATION.md).
 - **Production details:** MMKV persistence, crash-safe error boundary, idempotent purchase grants, app pauses when backgrounded, Android back handling, accessibility labels, privacy manifest, no unused permissions, release minification.
 
