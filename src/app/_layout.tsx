@@ -76,6 +76,7 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="arcade" options={{ gestureEnabled: false, animation: 'fade_from_bottom' }} />
           <Stack.Screen name="play" options={{ gestureEnabled: false, animation: 'fade_from_bottom' }} />
           <Stack.Screen name="results" options={{ gestureEnabled: false, animation: 'slide_from_right' }} />
           <Stack.Screen name="shop" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
