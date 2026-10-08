@@ -19,7 +19,7 @@ import mobileAds, {
 import { create } from 'zustand';
 
 import { useSettings } from '../state/settings';
-import { AdPacing, AdUnits } from './config';
+import { AdPacing, AdsEnabled, AdUnits } from './config';
 
 interface AdState {
   initialized: boolean;
@@ -41,6 +41,7 @@ let initPromise: Promise<void> | null = null;
 let showing = false;
 
 export function initAds(): Promise<void> {
+  if (!AdsEnabled) return Promise.resolve();
   if (!initPromise)
     initPromise = doInit().catch((e) => {
       if (__DEV__) console.warn('[ads] init failed', e);
