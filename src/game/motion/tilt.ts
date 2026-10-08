@@ -101,7 +101,7 @@ export function stepTilt(state: TiltState, rawDt: number): TiltState {
   return s;
 }
 export function inputTilt(state: TiltState, ev: MotionInput): TiltState {
-  if (state.phase !== 'running' || ev.type === 'action') return state;
+  if (state.phase !== 'running' || ev.type === 'action' || ev.type === 'touches') return state;
   if (ev.type === 'tilt') return { ...state, ax: ev.x, ay: ev.y };
   if (ev.type === 'up') return { ...state, pull: null };
   return { ...state, pull: { x: ev.x, y: ev.y } };

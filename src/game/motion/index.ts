@@ -3,21 +3,48 @@ import { createChain, inputChain, stepChain, type ChainState } from './chain';
 import { createCharge, inputCharge, stepCharge, type ChargeState } from './charge';
 import type { MotionInput } from './common';
 import { createDrift, inputDrift, stepDrift, type DriftState } from './drift';
+import { createDuel, inputDuel, stepDuel, type DuelState } from './duel';
 import { createFlow, inputFlow, stepFlow, type FlowState } from './flow';
+import { createPaint, inputPaint, stepPaint, type PaintState } from './paint';
+import { createStack, inputStack, stepStack, type StackState } from './stack';
 import { createSwipe, inputSwipe, stepSwipe, type SwipeState } from './swipe';
 import { createTilt, inputTilt, stepTilt, type TiltState } from './tilt';
 
 export const MOTION_GAMES = [
   {
     id: 'arena',
-    name: 'Orb Arena',
+    name: 'Dot Arena',
     color: '#4CE0B3',
-    tag: 'BATTLE ARENA',
+    tag: 'BATTLE · ONLINE-READY',
     gesture: 'Joystick + dash',
     description: 'Eat, grow, outlast the storm.',
     instruction: 'Drag anywhere to steer. Swallow smaller orbs, dodge bigger ones, and stay inside the zone.',
     unit: 'mass',
     action: 'Dash',
+  },
+  {
+    id: 'paint',
+    name: 'Dot Paint',
+    color: '#FF7AD9',
+    tag: 'TERRITORY · ONLINE-READY',
+    gesture: 'Swipe to steer',
+    description: 'Paint the map. Cut their trails.',
+    instruction:
+      'Swipe to turn. Leave your land to draw a trail, then return to claim the area. Cross a rival trail to knock them out.',
+    unit: '% land',
+    action: null,
+  },
+  {
+    id: 'duel',
+    name: 'Dot Duel',
+    color: '#FF5E7E',
+    tag: '2 PLAYERS · ONE PHONE',
+    gesture: 'Two-finger duel',
+    description: 'Face to face. First to five.',
+    instruction:
+      'Drag your paddle in your half and knock the puck into the other goal. Play a friend on the same phone, or the bot.',
+    unit: 'goals',
+    action: null,
   },
   {
     id: 'drift',
@@ -32,7 +59,7 @@ export const MOTION_GAMES = [
   },
   {
     id: 'charge',
-    name: 'Charge Shot',
+    name: 'Dot Jump',
     color: '#FF5E7E',
     tag: 'HOLD & RELEASE',
     gesture: 'Hold',
@@ -43,7 +70,7 @@ export const MOTION_GAMES = [
   },
   {
     id: 'swipe',
-    name: 'Swipe Split',
+    name: 'Dot Sort',
     color: '#5AC8FA',
     tag: 'SWIPE',
     gesture: 'Swipe',
@@ -54,7 +81,7 @@ export const MOTION_GAMES = [
   },
   {
     id: 'chain',
-    name: 'Chain Reaction',
+    name: 'Dot Chain',
     color: '#FF8A4C',
     tag: 'ONE SPARK',
     gesture: 'One tap',
@@ -65,7 +92,7 @@ export const MOTION_GAMES = [
   },
   {
     id: 'flow',
-    name: 'Connect Flow',
+    name: 'Dot Link',
     color: '#B48CFF',
     tag: 'DRAW',
     gesture: 'Draw',
@@ -76,13 +103,25 @@ export const MOTION_GAMES = [
   },
   {
     id: 'tilt',
-    name: 'Tilt Orb',
+    name: 'Dot Maze',
     color: '#C8F560',
     tag: 'TILT',
     gesture: 'Tilt',
     description: 'Roll out of the spinning maze.',
     instruction: 'Tilt your phone to roll through the gaps and escape. You can also drag to pull the orb.',
     unit: 'escapes',
+    action: null,
+  },
+  {
+    id: 'stack',
+    name: 'Dot Stack',
+    color: '#7A9CFF',
+    tag: 'HOLD & DARE',
+    gesture: 'Hold',
+    description: 'Grow it close. Never touch.',
+    instruction:
+      'Hold to grow a ring, release to lock it inside the last one. The closer you dare, the more you score.',
+    unit: 'points',
     action: null,
   },
 ] as const;
@@ -96,11 +135,14 @@ export interface MotionStates {
   chain: ChainState;
   flow: FlowState;
   tilt: TiltState;
+  stack: StackState;
+  duel: DuelState;
+  paint: PaintState;
 }
 export type AnyMotion = MotionStates[MotionId];
 
 interface Rules<S> {
-  create: (seed: number) => S;
+  create: (seed: number, playerName?: string) => S;
   step: (s: S, dt: number) => S;
   input: (s: S, ev: MotionInput) => S;
 }
@@ -112,10 +154,13 @@ export const MOTION_RULES: { [K in MotionId]: Rules<MotionStates[K]> } = {
   chain: { create: createChain, step: stepChain, input: inputChain },
   flow: { create: createFlow, step: stepFlow, input: inputFlow },
   tilt: { create: createTilt, step: stepTilt, input: inputTilt },
+  stack: { create: createStack, step: stepStack, input: inputStack },
+  duel: { create: createDuel, step: stepDuel, input: inputDuel },
+  paint: { create: createPaint, step: stepPaint, input: inputPaint },
 };
 // Erases the per-game generic so screens can hold any game's state.
 const rules = MOTION_RULES as unknown as Record<MotionId, Rules<AnyMotion>>;
-export const createMotion = (id: MotionId, seed: number) => rules[id].create(seed);
+export const createMotion = (id: MotionId, seed: number, playerName?: string) => rules[id].create(seed, playerName);
 export const stepMotion = (id: MotionId, s: AnyMotion, dt: number) => rules[id].step(s, dt);
 export const inputMotion = (id: MotionId, s: AnyMotion, ev: MotionInput) => rules[id].input(s, ev);
 export function isMotionId(id: unknown): id is MotionId {

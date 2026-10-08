@@ -21,6 +21,8 @@ export interface SettingsData {
   /** Rewarded "free coins" daily cap. */
   freeCoinsDay: string | null;
   freeCoinsCount: number;
+  /** Dot name shown on battle leaderboards. Empty means "You". */
+  playerName: string;
 }
 
 interface SettingsActions {
@@ -41,6 +43,7 @@ export const initialSettings: SettingsData = {
   reviewRequestedAt: 0,
   freeCoinsDay: null,
   freeCoinsCount: 0,
+  playerName: '',
 };
 
 export const useSettings = create<SettingsData & SettingsActions>()(
@@ -68,6 +71,7 @@ export const useSettings = create<SettingsData & SettingsActions>()(
         reviewRequestedAt: s.reviewRequestedAt,
         freeCoinsDay: s.freeCoinsDay,
         freeCoinsCount: s.freeCoinsCount,
+        playerName: s.playerName,
       }),
     },
   ),
@@ -75,4 +79,13 @@ export const useSettings = create<SettingsData & SettingsActions>()(
 
 export function useAccent(): string {
   return accentColor(useSettings((s) => s.accent));
+}
+
+export const NAME_MAX = 12;
+/** Trims, collapses spaces and caps length so names fit on the in-game leaderboard. */
+export function cleanName(raw: string): string {
+  return raw.replace(/\s+/g, ' ').trim().slice(0, NAME_MAX);
+}
+export function displayName(raw: string): string {
+  return cleanName(raw) || 'You';
 }

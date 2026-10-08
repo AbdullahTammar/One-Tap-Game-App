@@ -32,7 +32,7 @@ export default function Ranks() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Row style={styles.header}>
           <AppText variant="heading" accessibilityRole="header">
-            Gate Runner ranks
+            Dot Runner ranks
           </AppText>
         </Row>
 

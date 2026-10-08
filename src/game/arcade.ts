@@ -1,7 +1,7 @@
 export const ARCADE_GAMES = [
   {
     id: 'pulse',
-    name: 'Pulse',
+    name: 'Dot Pulse',
     color: '#B48CFF',
     tag: 'RHYTHM',
     description: 'Two rings. One perfect moment.',
@@ -10,7 +10,7 @@ export const ARCADE_GAMES = [
   },
   {
     id: 'switch',
-    name: 'Orbit Switch',
+    name: 'Dot Switch',
     color: '#5AC8FA',
     tag: 'REFLEX',
     description: 'Change lanes. Stay in orbit.',

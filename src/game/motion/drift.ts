@@ -77,7 +77,7 @@ export function stepDrift(state: DriftState, rawDt: number): DriftState {
   return s;
 }
 export function inputDrift(state: DriftState, ev: MotionInput): DriftState {
-  if (state.phase !== 'running' || ev.type === 'tilt' || ev.type === 'action') return state;
+  if (state.phase !== 'running' || ev.type === 'tilt' || ev.type === 'action' || ev.type === 'touches') return state;
   if (ev.type === 'down') return { ...state, grab: { x: ev.x, y: ev.y } };
   if (ev.type === 'up') return { ...state, grab: null };
   if (!state.grab) return { ...state, grab: { x: ev.x, y: ev.y } };

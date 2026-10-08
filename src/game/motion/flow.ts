@@ -46,7 +46,7 @@ export function collapse(s: FlowState, clear: Set<number>) {
   s.grid = g;
 }
 export function inputFlow(state: FlowState, ev: MotionInput): FlowState {
-  if (state.phase !== 'running' || ev.type === 'tilt' || ev.type === 'action') return state;
+  if (state.phase !== 'running' || ev.type === 'tilt' || ev.type === 'action' || ev.type === 'touches') return state;
   if (ev.type === 'up') {
     if (state.path.length < 2) return { ...state, path: [], loop: false };
     const s: FlowState = { ...state, path: [], loop: false, perfect: state.loop };

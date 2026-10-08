@@ -1,7 +1,7 @@
 import { base, clamp, dist, rand, validDt, type MotionBase, type MotionInput } from './common';
 
 /**
- * Orb Arena: an agar-style survival arena with abilities, power-ups and a shrinking zone.
+ * Dot Arena: an agar-style survival arena with abilities, power-ups and a shrinking zone.
  * Every orb, human or bot, is driven by the same `ArenaCommand`, so bots can later be swapped for remote players
  * and the simulation can run on a server unchanged.
  */
@@ -140,7 +140,7 @@ function addPellet(s: ArenaState) {
   const p = zoneSpot(s);
   s.pellets.push({ ...p, color: Math.floor(rand(s) * PELLET_COLORS.length) });
 }
-export function createArena(seed: number, playerColor = '#FFFFFF'): ArenaState {
+export function createArena(seed: number, playerName = 'You'): ArenaState {
   const s: ArenaState = {
     ...base(seed),
     orbs: [],
@@ -155,7 +155,7 @@ export function createArena(seed: number, playerColor = '#FFFFFF'): ArenaState {
     rank: 1,
     nextId: 0,
   };
-  s.orbs.push(makeOrb(s, 'You', playerColor, ARENA.startMass));
+  s.orbs.push(makeOrb(s, playerName, '#FFFFFF', ARENA.startMass));
   s.orbs[0].x = ARENA.world / 2;
   s.orbs[0].y = ARENA.world / 2;
   for (let i = 0; i < ARENA.bots; i++)
@@ -345,7 +345,7 @@ export function leaderboard(s: ArenaState, n = 5) {
     .slice(0, n);
 }
 export function inputArena(state: ArenaState, ev: MotionInput): ArenaState {
-  if (state.phase !== 'running' || ev.type === 'tilt') return state;
+  if (state.phase !== 'running' || ev.type === 'tilt' || ev.type === 'touches') return state;
   if (ev.type === 'action') return { ...state, cmd: { ...state.cmd, dash: true } };
   if (ev.type === 'up') return { ...state, stick: null, cmd: { dx: 0, dy: 0, dash: state.cmd.dash } };
   // Floating joystick: direction from where the finger first landed, full speed at 40 units.
