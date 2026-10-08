@@ -1,7 +1,9 @@
+import { router } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
 import { AppText } from '../../components/AppText';
+import { SecondaryButton } from '../../components/Buttons';
 import { Card, ProgressBar, Row, Screen } from '../../components/UI';
 import { RANKS, rankFor } from '../../game/ranks';
 import { useProgress } from '../../state/progress';
@@ -35,6 +37,7 @@ export default function Ranks() {
             Dot Runner ranks
           </AppText>
         </Row>
+        <SecondaryButton label="🏆  All achievements" onPress={() => router.push('/achievements')} />
 
         <Card style={styles.current}>
           <Row style={{ gap: 14 }}>

@@ -11,6 +11,7 @@ import { SkinDot } from '../../components/SkinDot';
 import { getSkin, MYSTERY_PRICE, mysteryPick, SKIN_CATEGORIES, SKINS, type SkinCategory } from '../../game/skins';
 import { haptic, playSfx } from '../../services/feedback';
 import { useProgress } from '../../state/progress';
+import { useAchievements } from '../../state/achievements';
 import { useAccent } from '../../state/settings';
 import { colors, radii } from '../../theme';
 import { formatNumber } from '../../utils/date';
@@ -29,6 +30,7 @@ export default function Skins() {
   const openMystery = () => {
     const won = useProgress.getState().buyMystery();
     if (!won) return;
+    useAchievements.getState().refresh();
     playSfx('unlock');
     haptic('success');
     setCategory(won.category);
@@ -69,6 +71,7 @@ export default function Skins() {
     }
     const result = useProgress.getState().selectSkin(cur.id);
     if (result === 'unlocked') {
+      useAchievements.getState().refresh();
       playSfx('unlock');
       haptic('success');
     } else if (result === 'equipped') {

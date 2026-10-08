@@ -20,6 +20,7 @@ import { AppState } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { AchievementToast } from '../components/AchievementToast';
 import { initAds } from '../services/ads';
 import { initFeedback } from '../services/feedback';
 import { initPurchases } from '../services/purchases';
@@ -81,7 +82,9 @@ export default function RootLayout() {
           <Stack.Screen name="play" options={{ gestureEnabled: false, animation: 'fade_from_bottom' }} />
           <Stack.Screen name="results" options={{ gestureEnabled: false, animation: 'slide_from_right' }} />
           <Stack.Screen name="shop" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="achievements" options={{ animation: 'slide_from_right' }} />
         </Stack>
+        <AchievementToast />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

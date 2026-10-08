@@ -2,7 +2,7 @@ import * as Application from 'expo-application';
 import { router } from 'expo-router';
 import * as StoreReview from 'expo-store-review';
 import type { ReactNode } from 'react';
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
 
 import { AppText } from '../../components/AppText';
 import { ScalePressable } from '../../components/Buttons';
@@ -12,7 +12,7 @@ import { showPrivacyOptions, useAdState } from '../../services/ads';
 import { Links } from '../../services/config';
 import { haptic } from '../../services/feedback';
 import { restorePurchases, usePurchaseState } from '../../services/purchases';
-import { useAccent, useSettings } from '../../state/settings';
+import { cleanName, NAME_MAX, useAccent, useSettings } from '../../state/settings';
 import { ACCENTS, colors, fonts } from '../../theme';
 
 export default function Settings() {
@@ -23,6 +23,7 @@ export default function Settings() {
   const adsRemoved = useSettings((s) => s.adsRemoved);
   const toggle = useSettings((s) => s.toggle);
   const setSetting = useSettings((s) => s.set);
+  const playerName = useSettings((s) => s.playerName);
   const privacyRequired = useAdState((s) => s.privacyOptionsRequired);
   const restoring = usePurchaseState((s) => s.busy === 'restore');
 
@@ -54,6 +55,21 @@ export default function Settings() {
             Settings
           </AppText>
         </Row>
+
+        <Section title="YOUR DOT">
+          <TextInput
+            value={playerName}
+            onChangeText={(t) => setSetting('playerName', t.slice(0, NAME_MAX))}
+            onEndEditing={() => setSetting('playerName', cleanName(playerName))}
+            placeholder="Name your dot"
+            placeholderTextColor={colors.textFaint}
+            maxLength={NAME_MAX}
+            autoCorrect={false}
+            accessibilityLabel="Your dot name, shown on battle leaderboards"
+            style={styles.nameInput}
+          />
+          <LinkRow label="Achievements" onPress={() => router.push('/achievements')} />
+        </Section>
 
         <Section title="GAMEPLAY">
           <ToggleRow label="Sound effects" value={sound} onChange={() => toggle('sound')} accent={accent} />
@@ -173,6 +189,7 @@ const styles = StyleSheet.create({
   content: { gap: 22, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 32 },
   header: { height: 44 },
   card: { backgroundColor: colors.surface, borderRadius: 20, paddingHorizontal: 16 },
+  nameInput: { color: colors.text, fontFamily: fonts.bodyBold, fontSize: 16, paddingVertical: 14 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 56 },
   rowLabel: { fontFamily: fonts.bodySemi, fontSize: 15, color: colors.text },
   swatches: { gap: 14, paddingVertical: 14 },

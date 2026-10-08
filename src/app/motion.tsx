@@ -31,6 +31,10 @@ import { getSkin } from '../game/skins';
 import { haptic, playSfx } from '../services/feedback';
 import { useArcadeProgress } from '../state/arcade';
 import { useProgress } from '../state/progress';
+import { useAchievements } from '../state/achievements';
+import type { ArenaState } from '../game/motion/arena';
+import type { PaintState } from '../game/motion/paint';
+import { ARENA } from '../game/motion/arena';
 import { cleanName, displayName, NAME_MAX, useSettings } from '../state/settings';
 import type { DuelState } from '../game/motion/duel';
 import { colors, fonts } from '../theme';
@@ -58,6 +62,7 @@ function MotionGame({ meta }: { meta: MotionMeta }) {
   const named = id === 'arena' || id === 'paint';
   const fresh = useCallback(() => createMotion(id, randomSeed(), displayName(useSettings.getState().playerName)), [id]);
   const [state, setState] = useState<AnyMotion>(fresh);
+  const [earned, setEarned] = useState(0);
   const current = useRef(state);
   const lastFrame = useRef<number | null>(null);
   const best = useArcadeProgress((s) => s.best[id] ?? 0);
@@ -78,6 +83,19 @@ function MotionGame({ meta }: { meta: MotionMeta }) {
       }
       if (next.phase === 'over' && previous.phase !== 'over') {
         useArcadeProgress.getState().record(id, next.score);
+        const arena = id === 'arena' ? (next as ArenaState) : null;
+        const duel = id === 'duel' ? (next as DuelState) : null;
+        const { coins } = useAchievements.getState().reportGame({
+          id,
+          score: next.score,
+          arenaKills: arena?.kills,
+          arenaWin: !!arena && arena.rank === 1 && arena.elapsed >= ARENA.matchTime,
+          paintKills: id === 'paint' ? (next as PaintState).painters[0].kills : 0,
+          duelWin: !!duel && duel.mode === 'bot' && duel.winner === 0,
+          duo: !!duel && duel.mode === 'duo',
+          linked: id === 'flow' ? next.score : 0,
+        });
+        setEarned(coins);
         playSfx('miss');
         haptic('error');
       }
@@ -175,7 +193,11 @@ function MotionGame({ meta }: { meta: MotionMeta }) {
   const share = () => {
     Share.share({
       message: `I scored ${state.score} ${meta.unit} in ${meta.name} on Lumo! Can you beat my dot? 🔵`,
-    }).catch(() => {});
+    })
+      .then((r) => {
+        if (r.action === Share.sharedAction) useAchievements.getState().reportShare();
+      })
+      .catch(() => {});
   };
   const rename = (text: string) => {
     useSettings.getState().set('playerName', text.slice(0, NAME_MAX));
@@ -237,7 +259,7 @@ function MotionGame({ meta }: { meta: MotionMeta }) {
           </View>
           <AppText style={styles.status}>
             {state.phase === 'over'
-              ? `${state.note ? `${state.note}. ` : ''}One more?`
+              ? `${state.note ? `${state.note}. ` : ''}${earned ? `+${earned} coins. ` : ''}One more?`
               : state.phase === 'paused'
                 ? 'Paused. Take your time.'
                 : state.phase === 'ready'
