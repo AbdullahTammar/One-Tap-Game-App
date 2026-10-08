@@ -60,6 +60,12 @@ export const CATALOG: readonly CoinPack[] = [
   { id: Products.coinsLarge, coins: 15000, title: '15,000 coins', badge: '+50%', fallbackPrice: '$9.99' },
 ];
 
+/**
+ * Master switch for ads. Paused for now; set to true before the production release.
+ * The ad code stays in place; with this off the SDK is never initialised, so no ad can load or show.
+ */
+export const AdsEnabled = false;
+
 /** Ad pacing — tuned to protect retention: never in the first runs, never back-to-back. */
 export const AdPacing = {
   graceRuns: 3,
