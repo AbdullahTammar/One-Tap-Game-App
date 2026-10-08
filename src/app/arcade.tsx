@@ -1,17 +1,18 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, BackHandler, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { AppState, BackHandler, Pressable, StyleSheet, View } from 'react-native';
 import { AppText } from '../components/AppText';
 import { ArcadeArt } from '../components/ArcadeArt';
-import { PrimaryButton, SecondaryButton } from '../components/Buttons';
-import { Row, Screen } from '../components/UI';
+import { PrimaryButton } from '../components/Buttons';
+import { Screen } from '../components/UI';
+import { GameHeader, GameStage, SessionOverlay } from '../components/GameSession';
 import { ARCADE_GAMES, createArcade, stepArcade, tapArcade, type ArcadeState } from '../game/arcade';
 import { getSkin } from '../game/skins';
 import { haptic, playSfx } from '../services/feedback';
 import { useArcadeProgress } from '../state/arcade';
 import { useProgress } from '../state/progress';
 import { useAchievements } from '../state/achievements';
-import { colors, fonts } from '../theme';
+import { colors } from '../theme';
 
 export default function ArcadeRoute() {
   const { game } = useLocalSearchParams<{ game?: string }>();
@@ -29,20 +30,20 @@ export default function ArcadeRoute() {
 }
 
 function ArcadeGame({ meta }: { meta: (typeof ARCADE_GAMES)[number] }) {
-  const { width, height } = useWindowDimensions();
-  const size = Math.max(160, Math.min(width - 48, height * 0.4, 360));
   const [state, setState] = useState(createArcade);
   const current = useRef(state);
   const lastFrame = useRef<number | null>(null);
+  const lastPaint = useRef(0);
   const best = useArcadeProgress((s) => s.best[meta.id]);
   const skin = getSkin(useProgress((s) => s.equipped));
   const commit = useCallback(
-    (next: ArcadeState) => {
+    (next: ArcadeState, publish = true) => {
       const previous = current.current;
       current.current = next;
-      setState(next);
+      if (publish || next.phase !== previous.phase) setState(next);
       if (next.score > previous.score) {
-        useArcadeProgress.getState().record(meta.id, next.score);
+        if (next.score > useArcadeProgress.getState().best[meta.id])
+          useArcadeProgress.getState().record(meta.id, next.score);
         playSfx(next.perfect ? 'perfect' : 'hit');
         haptic('light');
       }
@@ -85,12 +86,10 @@ function ArcadeGame({ meta }: { meta: (typeof ARCADE_GAMES)[number] }) {
       if (current.current.phase !== 'running') return;
       const previous = lastFrame.current;
       lastFrame.current = now;
-      // Long interruptions pause rather than silently killing the player's run.
-      if (previous !== null && now - previous > 250) {
-        pause();
-        return;
-      }
-      if (previous !== null) commit(stepArcade(current.current, meta.id, (now - previous) / 1000));
+      const publish = now - lastPaint.current >= 1000 / 60;
+      if (publish) lastPaint.current = now;
+      if (previous !== null)
+        commit(stepArcade(current.current, meta.id, Math.min((now - previous) / 1000, 0.05)), publish);
       if (current.current.phase === 'running') frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
@@ -98,86 +97,81 @@ function ArcadeGame({ meta }: { meta: (typeof ARCADE_GAMES)[number] }) {
       cancelAnimationFrame(frame);
       lastFrame.current = null;
     };
-  }, [state.phase, commit, meta.id, pause]);
+  }, [state.phase, commit, meta.id]);
   const tap = () => commit(tapArcade(current.current, meta.id));
-  const leave = () => router.replace('/');
+  const leave = useCallback(() => router.replace('/'), []);
   const playing = state.phase === 'running';
+  const start = () => {
+    lastFrame.current = null;
+    commit(tapArcade(current.current.phase === 'over' ? createArcade() : current.current, meta.id));
+  };
   return (
     <Screen edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={styles.content} bounces={false}>
-        <Row style={styles.header}>
-          <SecondaryButton label={playing ? 'Pause' : 'Games'} onPress={playing ? pause : leave} />
-          <View style={{ alignItems: 'flex-end' }}>
-            <AppText variant="overline">PERSONAL BEST</AppText>
-            <AppText variant="heading">{best}</AppText>
-          </View>
-        </Row>
-        <View style={styles.center}>
-          <AppText variant="overline" color={meta.color}>
-            {meta.tag}
-          </AppText>
-          <AppText variant="title" accessibilityRole="header">
-            {meta.name}
-          </AppText>
-          <AppText style={styles.instructions}>{meta.instruction}</AppText>
-        </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`${meta.name} tap area`}
-          accessibilityHint={meta.instruction}
-          disabled={!playing}
-          onPress={tap}
-          style={styles.field}
+      <View style={styles.content}>
+        <View
+          style={styles.game}
+          accessibilityElementsHidden={!playing}
+          importantForAccessibility={playing ? 'auto' : 'no-hide-descendants'}
         >
-          <ArcadeArt
-            id={meta.id}
+          <GameHeader
+            name={meta.name}
             color={meta.color}
-            size={size}
-            state={state}
-            orbFill={skin.fill}
-            orbEmoji={skin.emoji}
-            orbStroke={skin.stroke}
+            best={best}
+            score={state.score}
+            unit={meta.unit}
+            running={playing}
+            onPause={pause}
+            onLeave={leave}
           />
-        </Pressable>
-        <View style={styles.center}>
-          <AppText style={[styles.score, { color: meta.color }]} accessibilityLiveRegion="polite">
-            {state.score}
-          </AppText>
-          <AppText variant="overline">{meta.unit.toUpperCase()}</AppText>
-          <AppText style={styles.status}>
-            {state.phase === 'over'
-              ? 'So close. One more round?'
-              : state.phase === 'paused'
-                ? 'Paused. Take your time.'
-                : state.perfect
-                  ? 'Perfect timing!'
-                  : 'One tap. Find your flow.'}
+          <GameStage>
+            {({ width, height, size }) => (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={meta.name + ' tap area'}
+                accessibilityHint={meta.instruction}
+                disabled={!playing}
+                onPressIn={tap}
+                style={[styles.field, { width, height }]}
+              >
+                <ArcadeArt
+                  id={meta.id}
+                  color={meta.color}
+                  size={size}
+                  state={state}
+                  orbFill={skin.fill}
+                  orbEmoji={skin.emoji}
+                  orbStroke={skin.stroke}
+                />
+              </Pressable>
+            )}
+          </GameStage>
+          <AppText variant="caption" style={styles.hint}>
+            {state.perfect
+              ? 'Perfect timing!'
+              : meta.id === 'switch'
+                ? 'Tap anywhere to switch lanes'
+                : 'Tap anywhere in the field'}
           </AppText>
         </View>
-        {playing ? (
-          <PrimaryButton label={meta.id === 'switch' ? 'Switch lane' : 'Tap'} onPress={tap} />
-        ) : (
-          <PrimaryButton
-            label={state.phase === 'over' ? 'Play again' : state.phase === 'paused' ? 'Resume' : 'Start game'}
-            onPress={() => {
-              lastFrame.current = null;
-              commit(tapArcade(state.phase === 'over' ? createArcade() : current.current, meta.id));
-            }}
-          />
+        {!playing && (
+          <SessionOverlay
+            title={state.phase === 'paused' ? 'Paused' : state.phase === 'over' ? 'Round complete' : meta.name}
+            subtitle={state.phase === 'ready' ? meta.description : state.score + ' ' + meta.unit + ' · Best ' + best}
+            color={meta.color}
+            primary={state.phase === 'over' ? 'Play again' : state.phase === 'paused' ? 'Resume' : 'Start game'}
+            onPrimary={start}
+            onLeave={leave}
+          >
+            <AppText>{state.phase === 'over' ? 'One more round?' : meta.instruction}</AppText>
+          </SessionOverlay>
         )}
-        {(state.phase === 'paused' || state.phase === 'over') && (
-          <SecondaryButton label="Browse games" onPress={leave} />
-        )}
-      </ScrollView>
+      </View>
     </Screen>
   );
 }
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, padding: 24, gap: 20, width: '100%', maxWidth: 600, alignSelf: 'center' },
-  header: { justifyContent: 'space-between', gap: 12 },
-  center: { alignItems: 'center', gap: 8 },
-  instructions: { textAlign: 'center', maxWidth: 360 },
-  field: { alignItems: 'center', justifyContent: 'center', flex: 1 },
-  score: { fontFamily: fonts.displayHeavy, fontSize: 46 },
-  status: { color: colors.textMuted, textAlign: 'center' },
+  content: { flex: 1, width: '100%', maxWidth: 1000, alignSelf: 'center' },
+  game: { flex: 1, paddingHorizontal: 12, paddingBottom: 8, gap: 8 },
+  field: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, borderRadius: 22 },
+  hint: { minHeight: 32, textAlign: 'center', paddingVertical: 6 },
 });

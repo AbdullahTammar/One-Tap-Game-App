@@ -4,18 +4,19 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AppState,
   BackHandler,
+  Keyboard,
   Platform,
   Share,
   TextInput,
   StyleSheet,
-  useWindowDimensions,
   View,
   type GestureResponderEvent,
 } from 'react-native';
 import { AppText } from '../components/AppText';
 import { PrimaryButton, SecondaryButton } from '../components/Buttons';
 import { MotionArt } from '../components/MotionArt';
-import { Row, Screen } from '../components/UI';
+import { Screen } from '../components/UI';
+import { GameHeader, GameStage, SessionOverlay } from '../components/GameSession';
 import {
   createMotion,
   inputMotion,
@@ -56,8 +57,7 @@ export default function MotionRoute() {
 
 function MotionGame({ meta }: { meta: MotionMeta }) {
   const id = meta.id;
-  const { width, height } = useWindowDimensions();
-  const size = Math.max(200, Math.min(width - 32, height * 0.52, 440));
+  const [fieldWidth, setFieldWidth] = useState(320);
   const playerName = useSettings((s) => s.playerName);
   const named = id === 'arena' || id === 'paint';
   const fresh = useCallback(() => createMotion(id, randomSeed(), displayName(useSettings.getState().playerName)), [id]);
@@ -65,16 +65,18 @@ function MotionGame({ meta }: { meta: MotionMeta }) {
   const [earned, setEarned] = useState(0);
   const current = useRef(state);
   const lastFrame = useRef<number | null>(null);
+  const lastPaint = useRef(0);
   const best = useArcadeProgress((s) => s.best[id] ?? 0);
   const skin = getSkin(useProgress((s) => s.equipped));
   const commit = useCallback(
-    (next: AnyMotion) => {
+    (next: AnyMotion, publish = true) => {
       const previous = current.current;
       if (next === previous) return;
       current.current = next;
-      setState(next);
+      if (publish || next.phase !== previous.phase) setState(next);
       if (next.score > previous.score) {
-        useArcadeProgress.getState().record(id, next.score);
+        if (next.score > (useArcadeProgress.getState().best[id] ?? 0))
+          useArcadeProgress.getState().record(id, next.score);
         // Arena mass ticks up constantly; only kills deserve a sound there.
         if (id !== 'arena' || next.perfect) {
           playSfx(next.perfect ? 'perfect' : 'hit');
@@ -133,11 +135,10 @@ function MotionGame({ meta }: { meta: MotionMeta }) {
       if (current.current.phase !== 'running') return;
       const previous = lastFrame.current;
       lastFrame.current = now;
-      if (previous !== null && now - previous > 250) {
-        pause();
-        return;
-      }
-      if (previous !== null) commit(stepMotion(id, current.current, (now - previous) / 1000));
+      // Keep simulation/input responsive, but avoid reconciling hundreds of SVG nodes every frame.
+      const publish = now - lastPaint.current >= 1000 / (id === 'arena' || id === 'paint' ? 30 : 60);
+      if (publish) lastPaint.current = now;
+      if (previous !== null) commit(stepMotion(id, current.current, (now - previous) / 1000), publish);
       if (current.current.phase === 'running') frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
@@ -145,7 +146,7 @@ function MotionGame({ meta }: { meta: MotionMeta }) {
       cancelAnimationFrame(frame);
       lastFrame.current = null;
     };
-  }, [state.phase, commit, id, pause]);
+  }, [state.phase, commit, id]);
   // Dot Maze reads the accelerometer on devices; the web preview falls back to dragging.
   const running = state.phase === 'running';
   useEffect(() => {
@@ -159,7 +160,7 @@ function MotionGame({ meta }: { meta: MotionMeta }) {
         // iOS reports gravity with the opposite sign to Android.
         const sign = Platform.OS === 'ios' ? 1 : -1;
         sub = Accelerometer.addListener(({ x, y }) =>
-          commit(inputMotion(id, current.current, { type: 'tilt', x: sign * x * 1.6, y: -sign * y * 1.6 })),
+          commit(inputMotion(id, current.current, { type: 'tilt', x: sign * x * 1.6, y: -sign * y * 1.6 }), false),
         );
       })
       .catch(() => {});
@@ -168,8 +169,8 @@ function MotionGame({ meta }: { meta: MotionMeta }) {
       sub?.remove();
     };
   }, [id, running, commit]);
-  const send = useCallback((ev: MotionInput) => commit(inputMotion(id, current.current, ev)), [commit, id]);
-  const scale = 320 / size;
+  const send = useCallback((ev: MotionInput) => commit(inputMotion(id, current.current, ev), false), [commit, id]);
+  const scale = 320 / fieldWidth;
   const at = (type: 'down' | 'move' | 'up', e: GestureResponderEvent) => {
     const { locationX, locationY, touches } = e.nativeEvent;
     if (id === 'duel') {
@@ -186,8 +187,9 @@ function MotionGame({ meta }: { meta: MotionMeta }) {
   };
   const claim = () => current.current.phase === 'running';
   const start = (mode?: DuelState['mode']) => {
+    Keyboard.dismiss();
     lastFrame.current = null;
-    const from = state.phase === 'over' ? fresh() : current.current;
+    const from = current.current.phase === 'over' ? fresh() : current.current;
     commit({ ...from, ...(mode ? { mode } : null), phase: 'running' } as AnyMotion);
   };
   const share = () => {
@@ -205,126 +207,153 @@ function MotionGame({ meta }: { meta: MotionMeta }) {
     if (current.current.phase === 'ready') commit(createMotion(id, current.current.seed, displayName(text)));
   };
   const duelPick = id === 'duel' && state.phase !== 'running' && state.phase !== 'paused';
-  const leave = () => router.replace('/');
+  const leave = useCallback(() => router.replace('/'), []);
+  const arena = id === 'arena' ? (state as ArenaState) : null;
+  const cooldown = arena ? Math.ceil(arena.orbs[0].dashCd * 10) / 10 : 0;
+  const dashUnavailable = !!arena && (cooldown > 0 || arena.orbs[0].mass <= ARENA.startMass);
+  const instructions =
+    id === 'arena'
+      ? meta.instruction +
+        ' Dash gives a short speed boost, costs 12% mass, and recharges in 2.5 seconds. Grow past 20 mass to use it.'
+      : meta.instruction;
   return (
     <Screen edges={['top', 'bottom']}>
       <View style={styles.content}>
-        <Row style={styles.header}>
-          <SecondaryButton label={running ? 'Pause' : 'Games'} onPress={running ? pause : leave} />
-          <View style={styles.center}>
-            <AppText variant="overline" color={meta.color}>
-              {meta.tag}
-            </AppText>
-            <AppText variant="heading" accessibilityRole="header">
-              {meta.name}
-            </AppText>
-          </View>
-          <View style={{ alignItems: 'flex-end' }}>
-            <AppText variant="overline">BEST</AppText>
-            <AppText variant="heading">{best}</AppText>
-          </View>
-        </Row>
-        <AppText style={styles.instructions}>{meta.instruction}</AppText>
         <View
-          onStartShouldSetResponder={claim}
-          onMoveShouldSetResponder={claim}
-          onResponderTerminationRequest={() => false}
-          onResponderGrant={(e) => at('down', e)}
-          onResponderMove={(e) => at('move', e)}
-          onResponderRelease={(e) => at('up', e)}
-          onResponderTerminate={(e) => at('up', e)}
-          accessible
-          accessibilityLabel={`${meta.name} play area`}
-          accessibilityHint={meta.instruction}
-          style={[styles.field, { width: size, height: size }]}
+          style={styles.game}
+          accessibilityElementsHidden={!running}
+          importantForAccessibility={running ? 'auto' : 'no-hide-descendants'}
         >
-          <View style={styles.passThrough}>
-            <MotionArt
-              id={id}
-              color={meta.color}
-              size={size}
-              state={state}
-              orbFill={skin.fill}
-              orbEmoji={skin.emoji}
-              orbStroke={skin.stroke}
-            />
+          <GameHeader
+            name={meta.name}
+            color={meta.color}
+            best={best}
+            score={arena ? Math.floor(arena.orbs[0].mass) : state.score}
+            unit={meta.unit}
+            running={running}
+            onPause={pause}
+            onLeave={leave}
+          />
+          <GameStage>
+            {({ width, height, size }) => {
+              const fieldSize = id === 'arena' ? width : size;
+              const fieldHeight = id === 'arena' ? height : size;
+              return (
+                <View
+                  onLayout={(e) => setFieldWidth(e.nativeEvent.layout.width)}
+                  onStartShouldSetResponder={claim}
+                  onMoveShouldSetResponder={claim}
+                  onResponderTerminationRequest={() => false}
+                  onResponderGrant={(e) => at('down', e)}
+                  onResponderMove={(e) => at('move', e)}
+                  onResponderRelease={(e) => at('up', e)}
+                  onResponderTerminate={(e) => at('up', e)}
+                  accessible
+                  accessibilityLabel={meta.name + ' play area'}
+                  accessibilityHint={meta.instruction}
+                  style={[styles.field, { width: fieldSize, height: fieldHeight }]}
+                >
+                  <View style={styles.passThrough}>
+                    <MotionArt
+                      id={id}
+                      color={meta.color}
+                      size={fieldSize}
+                      height={fieldHeight}
+                      state={state}
+                      orbFill={skin.fill}
+                      orbEmoji={skin.emoji}
+                      orbStroke={skin.stroke}
+                    />
+                  </View>
+                </View>
+              );
+            }}
+          </GameStage>
+          <View style={styles.controls}>
+            <AppText variant="caption" style={styles.hint} numberOfLines={2}>
+              {id === 'arena' ? 'Drag to steer · eat smaller dots' : meta.gesture + ' to play'}
+            </AppText>
+            {meta.action && (
+              <PrimaryButton
+                size="md"
+                label={
+                  cooldown > 0
+                    ? 'Recharge ' + cooldown.toFixed(1) + 's'
+                    : dashUnavailable
+                      ? 'Grow to dash'
+                      : 'Dash · −12%'
+                }
+                accessibilityLabel="Dash speed boost. Costs 12 percent mass. 2.5 second cooldown."
+                disabled={!running || dashUnavailable}
+                onPress={() => send({ type: 'action' })}
+                style={{ minWidth: 148, backgroundColor: dashUnavailable ? colors.surfaceMuted : meta.color }}
+              />
+            )}
           </View>
         </View>
-        <Row style={styles.scoreRow}>
-          <View>
-            <AppText style={[styles.score, { color: meta.color }]} accessibilityLiveRegion="polite">
-              {state.score}
+        {!running && (
+          <SessionOverlay
+            title={state.phase === 'paused' ? 'Paused' : state.phase === 'over' ? 'Round complete' : meta.name}
+            subtitle={
+              state.phase === 'ready'
+                ? meta.description
+                : (arena ? 'Peak ' : '') + state.score + ' ' + meta.unit + ' · Best ' + best
+            }
+            color={meta.color}
+            primary={
+              duelPick
+                ? 'Play vs bot'
+                : state.phase === 'over'
+                  ? 'Play again'
+                  : state.phase === 'paused'
+                    ? 'Resume'
+                    : 'Start game'
+            }
+            onPrimary={() => start(duelPick ? 'bot' : undefined)}
+            onLeave={leave}
+            onShare={state.phase === 'over' && state.score > 0 ? share : undefined}
+          >
+            <AppText>
+              {state.phase === 'over'
+                ? (state.note || 'One more round?') + (earned ? ' +' + earned + ' coins.' : '')
+                : instructions}
             </AppText>
-            <AppText variant="overline">{meta.unit.toUpperCase()}</AppText>
-          </View>
-          <AppText style={styles.status}>
-            {state.phase === 'over'
-              ? `${state.note ? `${state.note}. ` : ''}${earned ? `+${earned} coins. ` : ''}One more?`
-              : state.phase === 'paused'
-                ? 'Paused. Take your time.'
-                : state.phase === 'ready'
-                  ? meta.description
-                  : state.note}
-          </AppText>
-        </Row>
-        {named && state.phase === 'ready' && (
-          <TextInput
-            value={playerName}
-            onChangeText={rename}
-            onEndEditing={() => useSettings.getState().set('playerName', cleanName(playerName))}
-            placeholder="Name your dot"
-            placeholderTextColor={colors.textFaint}
-            maxLength={NAME_MAX}
-            autoCorrect={false}
-            accessibilityLabel="Your dot name for the leaderboard"
-            style={styles.name}
-          />
-        )}
-        {duelPick ? (
-          <Row style={{ gap: 10 }}>
-            <View style={{ flex: 1 }}>
-              <PrimaryButton label="vs Bot" onPress={() => start('bot')} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <PrimaryButton label="2 Players" onPress={() => start('duo')} />
-            </View>
-          </Row>
-        ) : running ? (
-          meta.action ? (
-            <PrimaryButton label={meta.action} onPress={() => send({ type: 'action' })} />
-          ) : null
-        ) : (
-          <PrimaryButton
-            label={state.phase === 'over' ? 'Play again' : state.phase === 'paused' ? 'Resume' : 'Start game'}
-            onPress={() => start()}
-          />
-        )}
-        {state.phase === 'over' && state.score > 0 && <SecondaryButton label="Share score" onPress={share} />}
-        {(state.phase === 'paused' || state.phase === 'over') && (
-          <SecondaryButton label="Browse games" onPress={leave} />
+            {named && state.phase === 'ready' && (
+              <View style={{ gap: 6 }}>
+                <AppText variant="caption">Your dot name</AppText>
+                <TextInput
+                  value={playerName}
+                  onChangeText={rename}
+                  onEndEditing={() => useSettings.getState().set('playerName', cleanName(playerName))}
+                  placeholder="Name your dot"
+                  placeholderTextColor={colors.textFaint}
+                  maxLength={NAME_MAX}
+                  autoCorrect={false}
+                  accessibilityLabel="Your dot name"
+                  style={styles.name}
+                />
+              </View>
+            )}
+            {duelPick && <SecondaryButton label="2 players · same phone" onPress={() => start('duo')} />}
+          </SessionOverlay>
         )}
       </View>
     </Screen>
   );
 }
 const styles = StyleSheet.create({
-  content: { flex: 1, padding: 16, gap: 14, width: '100%', maxWidth: 600, alignSelf: 'center' },
-  header: { justifyContent: 'space-between', gap: 12 },
-  center: { alignItems: 'center', gap: 2, flex: 1 },
-  instructions: { textAlign: 'center', color: colors.textMuted },
-  field: { alignSelf: 'center', borderRadius: 28, overflow: 'hidden', userSelect: 'none' },
+  content: { flex: 1, width: '100%', maxWidth: 1000, alignSelf: 'center' },
+  game: { flex: 1, paddingHorizontal: 12, paddingBottom: 8, gap: 8 },
+  field: { borderRadius: 22, overflow: 'hidden', userSelect: 'none' },
   passThrough: { pointerEvents: 'none' },
+  controls: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  hint: { flex: 1, textAlign: 'center' },
   name: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    backgroundColor: colors.surfaceRaised,
+    borderRadius: 14,
+    padding: 12,
     color: colors.text,
     fontFamily: fonts.bodyBold,
     fontSize: 16,
-    textAlign: 'center',
   },
-  scoreRow: { justifyContent: 'space-between', gap: 16, alignItems: 'center' },
-  score: { fontFamily: fonts.displayHeavy, fontSize: 40 },
-  status: { color: colors.textSoft, textAlign: 'right', flex: 1 },
 });

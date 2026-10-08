@@ -43,6 +43,14 @@ yarn-error.*
 # test output
 coverage/
 .env
+.env.*
+!.env.example
+credentials.json
+service-account*.json
+google-services.json
+GoogleService-Info.plist
+*.keystore
+*.pfx
 
 # CanvasKit wasm for the web preview (copied by `npm run web`)
 public/canvaskit.wasm

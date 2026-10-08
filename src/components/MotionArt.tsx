@@ -18,6 +18,7 @@ interface Props {
   id: MotionId;
   color: string;
   size: number;
+  height?: number;
   state?: AnyMotion;
   orbFill?: string;
   orbStroke?: string;
@@ -34,6 +35,7 @@ export const MotionArt = memo(function MotionArt({
   id,
   color,
   size,
+  height = size,
   state,
   orbFill = colors.white,
   orbStroke = colors.white,
@@ -41,20 +43,21 @@ export const MotionArt = memo(function MotionArt({
 }: Props) {
   const s = state ?? createMotion(id, 7);
   const o = { orbFill, orbStroke, orbEmoji, color };
+  const fieldHeight = id === 'arena' ? (320 * height) / size : 320;
   return (
-    <Svg width={size} height={size} viewBox="0 0 320 320">
+    <Svg width={size} height={height} viewBox={`0 0 320 ${fieldHeight}`}>
       <Rect
         x={1}
         y={1}
         width={318}
-        height={318}
+        height={fieldHeight - 2}
         rx={28}
         fill={colors.surface}
         stroke={colors.outline}
         strokeWidth={2}
       />
       {id === 'arena' ? (
-        <ArenaView s={s as ArenaState} {...o} />
+        <ArenaView s={s as ArenaState} fieldHeight={fieldHeight} {...o} />
       ) : id === 'drift' ? (
         <DriftView s={s as DriftState} {...o} />
       ) : id === 'charge' ? (
@@ -292,32 +295,37 @@ function TiltView({ s, orbFill, orbStroke, orbEmoji, color }: { s: TiltState } &
   );
 }
 
-function ArenaView({ s, orbFill, orbStroke, orbEmoji }: { s: ArenaState } & Orb) {
+function ArenaView({ s, orbFill, orbStroke, orbEmoji, fieldHeight }: { s: ArenaState; fieldHeight: number } & Orb) {
   const me = s.orbs[0];
   const r = radiusOf(me.mass);
   // Zoom out as you grow so big orbs still see danger coming.
   const view = Math.min(320 * Math.max(1, 0.55 + r / 40), 900);
   const k = 320 / view;
   const tx = (x: number) => (x - me.x) * k + 160;
-  const ty = (y: number) => (y - me.y) * k + 160;
+  const ty = (y: number) => (y - me.y) * k + fieldHeight / 2;
+  const viewHeight = fieldHeight / k;
   const visible = (x: number, y: number, rr: number) =>
-    Math.abs(x - me.x) < view / 2 + rr && Math.abs(y - me.y) < view / 2 + rr;
+    Math.abs(x - me.x) < view / 2 + rr && Math.abs(y - me.y) < viewHeight / 2 + rr;
   const grid = 100;
   const lines: number[] = [];
   for (let g = Math.floor((me.x - view / 2) / grid) * grid; g < me.x + view / 2; g += grid) lines.push(g);
   const rows: number[] = [];
-  for (let g = Math.floor((me.y - view / 2) / grid) * grid; g < me.y + view / 2; g += grid) rows.push(g);
+  for (let g = Math.floor((me.y - viewHeight / 2) / grid) * grid; g < me.y + viewHeight / 2; g += grid) rows.push(g);
   const top = leaderboard(s, 3);
+  // Batch equal-color pellets into six native paths instead of a native view per pellet.
+  const pelletPaths = PELLET_COLORS.map(() => '');
+  const pr = Math.max(1.5, 3.5 * k);
+  for (const p of s.pellets) {
+    if (!visible(p.x, p.y, 4)) continue;
+    const x = tx(p.x),
+      y = ty(p.y);
+    pelletPaths[p.color] += `M${x - pr},${y}a${pr},${pr} 0 1,0 ${pr * 2},0a${pr},${pr} 0 1,0 ${-pr * 2},0Z`;
+  }
+  const gridPath =
+    lines.map((g) => `M${tx(g)},0V${fieldHeight}`).join('') + rows.map((g) => `M0,${ty(g)}H320`).join('');
   return (
     <>
-      <G opacity={0.35}>
-        {lines.map((g) => (
-          <Line key={`x${g}`} x1={tx(g)} y1={0} x2={tx(g)} y2={320} stroke={colors.outline} strokeWidth={1} />
-        ))}
-        {rows.map((g) => (
-          <Line key={`y${g}`} x1={0} y1={ty(g)} x2={320} y2={ty(g)} stroke={colors.outline} strokeWidth={1} />
-        ))}
-      </G>
+      <Path d={gridPath} fill="none" stroke={colors.outline} strokeWidth={1} opacity={0.35} />
       <Rect
         x={tx(0)}
         y={ty(0)}
@@ -336,11 +344,7 @@ function ArenaView({ s, orbFill, orbStroke, orbEmoji }: { s: ArenaState } & Orb)
         strokeDasharray="8 6"
         fill="none"
       />
-      {s.pellets.map((p, i) =>
-        visible(p.x, p.y, 4) ? (
-          <Circle key={i} cx={tx(p.x)} cy={ty(p.y)} r={Math.max(1.5, 3.5 * k)} fill={PELLET_COLORS[p.color]} />
-        ) : null,
-      )}
+      {pelletPaths.map((d, i) => (d ? <Path key={i} d={d} fill={PELLET_COLORS[i]} /> : null))}
       {s.powers.map((p, i) =>
         visible(p.x, p.y, 10) ? (
           <G key={`p${i}`}>
@@ -543,18 +547,22 @@ function PaintView({ s, orbFill, orbStroke, orbEmoji }: { s: PaintState } & Orb)
       }
     }
   const colorOf = (id: number) => (id === 0 ? orbFill : PAINT_COLORS[id % PAINT_COLORS.length]);
+  const regions = new Map<string, { owner: number; trail: boolean; path: string }>();
+  for (const r of runs) {
+    const key = `${r.o}:${r.trail}`;
+    const region = regions.get(key) ?? { owner: r.o, trail: r.trail, path: '' };
+    region.path += `M${r.x * c},${r.y * c}h${r.w * c}v${c}h${-r.w * c}Z`;
+    regions.set(key, region);
+  }
   const board = paintBoard(s).slice(0, 3);
   return (
     <>
-      {runs.map((r, i) => (
-        <Rect
-          key={i}
-          x={r.x * c}
-          y={r.y * c}
-          width={r.w * c}
-          height={c}
-          fill={colorOf(r.o)}
-          fillOpacity={r.trail ? 0.45 : r.o === 0 ? 0.55 : 0.4}
+      {[...regions.entries()].map(([key, region]) => (
+        <Path
+          key={key}
+          d={region.path}
+          fill={colorOf(region.owner)}
+          fillOpacity={region.trail ? 0.45 : region.owner === 0 ? 0.55 : 0.4}
         />
       ))}
       {s.painters.map((p) =>

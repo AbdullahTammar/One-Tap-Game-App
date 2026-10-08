@@ -1,6 +1,6 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, BackHandler, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { AppState, BackHandler, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn,
@@ -46,7 +46,8 @@ export default function Play() {
   const accent = useAccent();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
-  const ringSize = Math.min(width - 90, height * 0.42, 420);
+  const [fieldSpace, setFieldSpace] = useState({ width, height: height - insets.top - 64 });
+  const ringSize = Math.max(1, Math.min(fieldSpace.width - 24, fieldSpace.height - 100 - insets.bottom, 720));
 
   const best = useProgress((s) => s.best);
   const skin = getSkin(useProgress((s) => s.equipped));
@@ -227,10 +228,8 @@ export default function Play() {
           onPress={hud.phase === 'running' ? pause : quit}
         />
         <View style={styles.bestBox}>
-          <AppText variant="overline" style={{ fontSize: 11 }}>
-            BEST
-          </AppText>
-          <AppText style={styles.bestValue}>{Math.max(best, hud.score)}</AppText>
+          <AppText variant="bodyStrong">Gate Runner</AppText>
+          <AppText variant="caption">Best {Math.max(best, hud.score)}</AppText>
         </View>
         <View style={styles.level}>
           <AppText variant="bodyStrong" style={{ fontSize: 13 }}>
@@ -241,7 +240,14 @@ export default function Play() {
 
       <GestureDetector gesture={engine.gesture}>
         <View
-          style={[styles.field, { paddingBottom: 56 + insets.bottom }]}
+          style={[styles.field, { paddingBottom: 12 + insets.bottom }]}
+          onLayout={({ nativeEvent: { layout } }) =>
+            setFieldSpace((old) =>
+              old.width === layout.width && old.height === layout.height
+                ? old
+                : { width: layout.width, height: layout.height },
+            )
+          }
           accessible
           accessibilityRole="button"
           accessibilityLabel="Tap area"
@@ -267,54 +273,59 @@ export default function Play() {
 
       {sheet !== 'none' && (
         <Animated.View entering={FadeIn.duration(180)} exiting={FadeOut.duration(150)} style={styles.scrim}>
-          <Animated.View
-            entering={SlideInDown.springify().damping(18)}
-            exiting={SlideOutDown.duration(180)}
-            accessibilityViewIsModal
-            style={[styles.sheet, { marginBottom: 16 + insets.bottom }]}
+          <ScrollView
+            bounces={false}
+            contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end', paddingTop: insets.top + 12 }}
           >
-            {sheet === 'over' ? (
-              <>
-                <View style={{ gap: 6 }}>
-                  <AppText variant="title">Missed!</AppText>
-                  <AppText>
-                    {summary?.newBest
-                      ? `New best · ${hud.score} gates`
-                      : `Score ${hud.score} · Best ${Math.max(best, hud.score)}`}
-                  </AppText>
-                </View>
-                {showContinue && (
-                  <ScalePressable
-                    onPress={watchToContinue}
-                    disabled={watching}
-                    style={styles.continueRow}
-                    accessibilityLabel="Continue run, watch a short ad"
-                  >
-                    <Icon name="film" size={20} color={accent} />
-                    <AppText variant="bodyStrong" style={{ flex: 1 }}>
-                      Continue run
+            <Animated.View
+              entering={SlideInDown.springify().damping(18)}
+              exiting={SlideOutDown.duration(180)}
+              accessibilityViewIsModal
+              style={[styles.sheet, { marginBottom: 16 + insets.bottom }]}
+            >
+              {sheet === 'over' ? (
+                <>
+                  <View style={{ gap: 6 }}>
+                    <AppText variant="title">Missed!</AppText>
+                    <AppText>
+                      {summary?.newBest
+                        ? `New best · ${hud.score} gates`
+                        : `Score ${hud.score} · Best ${Math.max(best, hud.score)}`}
                     </AppText>
-                    <AppText variant="label">Watch ad</AppText>
-                  </ScalePressable>
-                )}
-                <View style={styles.sheetButtons}>
-                  <SecondaryButton label="Results" onPress={openResults} style={{ flex: 1 }} />
-                  <PrimaryButton label="Retry" size="md" onPress={retry} style={{ flex: 1 }} />
-                </View>
-              </>
-            ) : (
-              <>
-                <View style={{ gap: 6 }}>
-                  <AppText variant="title">Paused</AppText>
-                  <AppText>{hud.score} gates so far. Take a breath.</AppText>
-                </View>
-                <View style={styles.sheetButtons}>
-                  <SecondaryButton label="Quit" onPress={quit} style={{ flex: 1 }} />
-                  <PrimaryButton label="Resume" size="md" onPress={engine.tap} style={{ flex: 1 }} />
-                </View>
-              </>
-            )}
-          </Animated.View>
+                  </View>
+                  {showContinue && (
+                    <ScalePressable
+                      onPress={watchToContinue}
+                      disabled={watching}
+                      style={styles.continueRow}
+                      accessibilityLabel="Continue run, watch a short ad"
+                    >
+                      <Icon name="film" size={20} color={accent} />
+                      <AppText variant="bodyStrong" style={{ flex: 1 }}>
+                        Continue run
+                      </AppText>
+                      <AppText variant="label">Watch ad</AppText>
+                    </ScalePressable>
+                  )}
+                  <View style={styles.sheetButtons}>
+                    <SecondaryButton label="Results" onPress={openResults} style={{ flex: 1 }} />
+                    <PrimaryButton label="Retry" size="md" onPress={retry} style={{ flex: 1 }} />
+                  </View>
+                </>
+              ) : (
+                <>
+                  <View style={{ gap: 6 }}>
+                    <AppText variant="title">Paused</AppText>
+                    <AppText>{hud.score} gates so far. Take a breath.</AppText>
+                  </View>
+                  <View style={styles.sheetButtons}>
+                    <SecondaryButton label="Quit" onPress={quit} style={{ flex: 1 }} />
+                    <PrimaryButton label="Resume" size="md" onPress={engine.tap} style={{ flex: 1 }} />
+                  </View>
+                </>
+              )}
+            </Animated.View>
+          </ScrollView>
         </Animated.View>
       )}
     </View>
@@ -351,14 +362,13 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.ground },
   header: {
     height: 64,
-    paddingTop: 20,
+    paddingTop: 4,
     paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   bestBox: { alignItems: 'center', gap: 2 },
-  bestValue: { fontFamily: fonts.display, fontSize: 18, color: colors.text },
   level: {
     height: 36,
     minWidth: 44,
@@ -368,7 +378,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  field: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 32 },
+  field: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center', gap: 16 },
   scoreWrap: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', gap: 8 },
   perfect: { position: 'absolute', top: '24%', left: 0, right: 0, alignItems: 'center' },
   perfectText: { fontFamily: fonts.display, fontSize: 16, letterSpacing: 0.5 },
@@ -381,6 +391,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   sheet: {
+    width: '100%',
+    maxWidth: 440,
+    alignSelf: 'center',
     backgroundColor: colors.surface,
     borderRadius: 28,
     paddingTop: 28,

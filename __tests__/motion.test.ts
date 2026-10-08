@@ -13,6 +13,16 @@ import { createTilt, inputTilt, stepTilt, TILT } from '../src/game/motion/tilt';
 const run = <T extends { phase: string }>(s: T): T => ({ ...s, phase: 'running' });
 const ids = MOTION_GAMES.map((g) => g.id) as MotionId[];
 
+test('arena: delayed foreground frames stay running and cap elapsed simulation time', () => {
+  let s = run(createArena(42));
+  for (const dt of [0.3, 1, 2, 0.5]) {
+    const elapsed = s.elapsed;
+    s = stepArena(s, dt);
+    expect(s.phase).toBe('running');
+    expect(s.elapsed - elapsed).toBeCloseTo(0.05);
+  }
+});
+
 describe('shared motion rules', () => {
   test.each(ids)('%s is deterministic for a seed', (id) => {
     const a = createMotion(id, 42);
