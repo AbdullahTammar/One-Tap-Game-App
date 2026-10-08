@@ -2,10 +2,12 @@ import { router } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { AppText } from '../../components/AppText';
 import { ArcadeArt } from '../../components/ArcadeArt';
+import { MotionArt } from '../../components/MotionArt';
 import { PrimaryButton, ScalePressable } from '../../components/Buttons';
 import { Card, CoinChip, Logo, ProgressBar, RingPreview, Row, Screen } from '../../components/UI';
 import { ARCADE_GAMES } from '../../game/arcade';
 import { ECONOMY } from '../../game/constants';
+import { MOTION_GAMES } from '../../game/motion';
 import { getSkin } from '../../game/skins';
 import { useArcadeProgress } from '../../state/arcade';
 import { useProgress } from '../../state/progress';
@@ -40,7 +42,7 @@ export default function Home() {
           <AppText variant="title" accessibilityRole="header">
             Small circles.{'\n'}Big obsession.
           </AppText>
-          <AppText>Four ways to find your flow. All it takes is a tap.</AppText>
+          <AppText>Eleven ways to find your flow. Tap, drag, swipe, draw, tilt and battle.</AppText>
         </View>
         <Card style={styles.featured}>
           <Row style={styles.header}>
@@ -60,7 +62,7 @@ export default function Home() {
           <AppText variant="heading" accessibilityRole="header">
             More to play
           </AppText>
-          <AppText variant="label">3 NEW GAMES</AppText>
+          <AppText variant="label">ONE TAP</AppText>
         </Row>
         {ARCADE_GAMES.map((game, index) => (
           <ScalePressable
@@ -82,6 +84,47 @@ export default function Home() {
                   {game.name}
                 </AppText>
                 <AppText>{game.description}</AppText>
+                <AppText variant="bodyStrong" color={game.color}>
+                  Play now →
+                </AppText>
+              </View>
+            </Row>
+          </ScalePressable>
+        ))}
+        <Row style={styles.header}>
+          <AppText variant="heading" accessibilityRole="header">
+            Move & play
+          </AppText>
+          <AppText variant="label">{MOTION_GAMES.length} NEW GAMES</AppText>
+        </Row>
+        {MOTION_GAMES.map((game, index) => (
+          <ScalePressable
+            key={game.id}
+            accessibilityLabel={`Play ${game.name}. ${game.description} Best score ${arcadeBest[game.id]}`}
+            onPress={() => router.push({ pathname: '/motion', params: { game: game.id } })}
+            style={[styles.gameCard, index === 0 && styles.spotlight]}
+          >
+            <Row style={styles.header}>
+              <AppText variant="overline" color={game.color}>
+                {index === 0 ? 'NEW · ' : ''}
+                {game.tag}
+              </AppText>
+              <AppText variant="label">Best {arcadeBest[game.id]}</AppText>
+            </Row>
+            <Row style={{ gap: 12, flexWrap: 'wrap' }}>
+              <MotionArt
+                id={game.id}
+                color={game.color}
+                size={index === 0 ? 150 : 96}
+                orbFill={skin.fill}
+                orbStroke={skin.stroke}
+              />
+              <View style={{ flex: 1, minWidth: 140, gap: 7 }}>
+                <AppText variant="heading" style={{ fontSize: 20 }}>
+                  {game.name}
+                </AppText>
+                <AppText>{game.description}</AppText>
+                <AppText variant="label">{game.gesture}</AppText>
                 <AppText variant="bodyStrong" color={game.color}>
                   Play now →
                 </AppText>
@@ -125,6 +168,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.divider,
   },
+  spotlight: { borderColor: '#4CE0B3', borderWidth: 1.5 },
   grid: { flexDirection: 'row', gap: 12, flexWrap: 'wrap' },
   stat: { flex: 1, minWidth: 125, gap: 8 },
   cardValue: { fontFamily: fonts.displaySemi, fontSize: 17, color: colors.text },
