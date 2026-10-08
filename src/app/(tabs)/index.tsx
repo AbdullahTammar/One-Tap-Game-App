@@ -42,7 +42,7 @@ export default function Home() {
           <AppText variant="title" accessibilityRole="header">
             Small circles.{'\n'}Big obsession.
           </AppText>
-          <AppText>Eleven ways to find your flow. Tap, drag, swipe, draw, tilt and battle.</AppText>
+          <AppText>Fourteen ways to play. Tap, drag, swipe, draw, tilt, battle — or duel a friend.</AppText>
         </View>
         <Card style={styles.featured}>
           <Row style={styles.header}>
@@ -54,9 +54,9 @@ export default function Home() {
           <View style={styles.art}>
             <RingPreview size={180} orbFill={skin.fill} orbStroke={skin.stroke} orbEmoji={skin.emoji} />
           </View>
-          <AppText variant="heading">Gate Runner</AppText>
+          <AppText variant="heading">Dot Runner</AppText>
           <AppText>Perfect timing. Endless orbit. Tap as your dot crosses the gate.</AppText>
-          <PrimaryButton label="Play Gate Runner" icon="play" onPress={() => router.push('/play')} />
+          <PrimaryButton label="Play Dot Runner" icon="play" onPress={() => router.push('/play')} />
         </Card>
         <Row style={styles.header}>
           <AppText variant="heading" accessibilityRole="header">
@@ -140,7 +140,7 @@ export default function Home() {
             </Row>
           </ScalePressable>
         ))}
-        <AppText variant="overline">GATE RUNNER / DAILY PROGRESS</AppText>
+        <AppText variant="overline">DOT RUNNER / DAILY PROGRESS</AppText>
         <View style={styles.grid}>
           <Card style={styles.stat}>
             <AppText variant="label">Streak</AppText>

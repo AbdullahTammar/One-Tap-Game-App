@@ -5,6 +5,8 @@ import {
   AppState,
   BackHandler,
   Platform,
+  Share,
+  TextInput,
   StyleSheet,
   useWindowDimensions,
   View,
@@ -29,6 +31,8 @@ import { getSkin } from '../game/skins';
 import { haptic, playSfx } from '../services/feedback';
 import { useArcadeProgress } from '../state/arcade';
 import { useProgress } from '../state/progress';
+import { cleanName, displayName, NAME_MAX, useSettings } from '../state/settings';
+import type { DuelState } from '../game/motion/duel';
 import { colors, fonts } from '../theme';
 
 export default function MotionRoute() {
@@ -50,7 +54,10 @@ function MotionGame({ meta }: { meta: MotionMeta }) {
   const id = meta.id;
   const { width, height } = useWindowDimensions();
   const size = Math.max(200, Math.min(width - 32, height * 0.52, 440));
-  const [state, setState] = useState<AnyMotion>(() => createMotion(id, randomSeed()));
+  const playerName = useSettings((s) => s.playerName);
+  const named = id === 'arena' || id === 'paint';
+  const fresh = useCallback(() => createMotion(id, randomSeed(), displayName(useSettings.getState().playerName)), [id]);
+  const [state, setState] = useState<AnyMotion>(fresh);
   const current = useRef(state);
   const lastFrame = useRef<number | null>(null);
   const best = useArcadeProgress((s) => s.best[id] ?? 0);
@@ -121,7 +128,7 @@ function MotionGame({ meta }: { meta: MotionMeta }) {
       lastFrame.current = null;
     };
   }, [state.phase, commit, id, pause]);
-  // Tilt Orb reads the accelerometer on devices; the web preview falls back to dragging.
+  // Dot Maze reads the accelerometer on devices; the web preview falls back to dragging.
   const running = state.phase === 'running';
   useEffect(() => {
     if (id !== 'tilt' || !running || Platform.OS === 'web') return;
@@ -145,14 +152,37 @@ function MotionGame({ meta }: { meta: MotionMeta }) {
   }, [id, running, commit]);
   const send = useCallback((ev: MotionInput) => commit(inputMotion(id, current.current, ev)), [commit, id]);
   const scale = 320 / size;
-  const at = (type: 'down' | 'move' | 'up', e: GestureResponderEvent) =>
-    send({ type, x: e.nativeEvent.locationX * scale, y: e.nativeEvent.locationY * scale });
-  const claim = () => current.current.phase === 'running';
-  const start = () => {
-    lastFrame.current = null;
-    const from = state.phase === 'over' ? createMotion(id, randomSeed()) : current.current;
-    commit({ ...from, phase: 'running' });
+  const at = (type: 'down' | 'move' | 'up', e: GestureResponderEvent) => {
+    const { locationX, locationY, touches } = e.nativeEvent;
+    if (id === 'duel') {
+      // Multi-touch: every finger still down. Some web pointers report no touches, so fall back to the pointer.
+      const points = touches?.length
+        ? touches.map((t) => ({ x: t.locationX * scale, y: t.locationY * scale }))
+        : type === 'up'
+          ? []
+          : [{ x: locationX * scale, y: locationY * scale }];
+      send({ type: 'touches', points });
+      return;
+    }
+    send({ type, x: locationX * scale, y: locationY * scale });
   };
+  const claim = () => current.current.phase === 'running';
+  const start = (mode?: DuelState['mode']) => {
+    lastFrame.current = null;
+    const from = state.phase === 'over' ? fresh() : current.current;
+    commit({ ...from, ...(mode ? { mode } : null), phase: 'running' } as AnyMotion);
+  };
+  const share = () => {
+    Share.share({
+      message: `I scored ${state.score} ${meta.unit} in ${meta.name} on Lumo! Can you beat my dot? 🔵`,
+    }).catch(() => {});
+  };
+  const rename = (text: string) => {
+    useSettings.getState().set('playerName', text.slice(0, NAME_MAX));
+    // Ready screens rebuild the match so the new name shows on the leaderboard straight away.
+    if (current.current.phase === 'ready') commit(createMotion(id, current.current.seed, displayName(text)));
+  };
+  const duelPick = id === 'duel' && state.phase !== 'running' && state.phase !== 'paused';
   const leave = () => router.replace('/');
   return (
     <Screen edges={['top', 'bottom']}>
@@ -215,16 +245,39 @@ function MotionGame({ meta }: { meta: MotionMeta }) {
                   : state.note}
           </AppText>
         </Row>
-        {running ? (
+        {named && state.phase === 'ready' && (
+          <TextInput
+            value={playerName}
+            onChangeText={rename}
+            onEndEditing={() => useSettings.getState().set('playerName', cleanName(playerName))}
+            placeholder="Name your dot"
+            placeholderTextColor={colors.textFaint}
+            maxLength={NAME_MAX}
+            autoCorrect={false}
+            accessibilityLabel="Your dot name for the leaderboard"
+            style={styles.name}
+          />
+        )}
+        {duelPick ? (
+          <Row style={{ gap: 10 }}>
+            <View style={{ flex: 1 }}>
+              <PrimaryButton label="vs Bot" onPress={() => start('bot')} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <PrimaryButton label="2 Players" onPress={() => start('duo')} />
+            </View>
+          </Row>
+        ) : running ? (
           meta.action ? (
             <PrimaryButton label={meta.action} onPress={() => send({ type: 'action' })} />
           ) : null
         ) : (
           <PrimaryButton
             label={state.phase === 'over' ? 'Play again' : state.phase === 'paused' ? 'Resume' : 'Start game'}
-            onPress={start}
+            onPress={() => start()}
           />
         )}
+        {state.phase === 'over' && state.score > 0 && <SecondaryButton label="Share score" onPress={share} />}
         {(state.phase === 'paused' || state.phase === 'over') && (
           <SecondaryButton label="Browse games" onPress={leave} />
         )}
@@ -239,6 +292,16 @@ const styles = StyleSheet.create({
   instructions: { textAlign: 'center', color: colors.textMuted },
   field: { alignSelf: 'center', borderRadius: 28, overflow: 'hidden', userSelect: 'none' },
   passThrough: { pointerEvents: 'none' },
+  name: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    color: colors.text,
+    fontFamily: fonts.bodyBold,
+    fontSize: 16,
+    textAlign: 'center',
+  },
   scoreRow: { justifyContent: 'space-between', gap: 16, alignItems: 'center' },
   score: { fontFamily: fonts.displayHeavy, fontSize: 40 },
   status: { color: colors.textSoft, textAlign: 'right', flex: 1 },

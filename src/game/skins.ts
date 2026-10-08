@@ -7,7 +7,7 @@ export interface Skin {
   price: number;
   /** Soft glow behind the orb in gameplay. */
   glow?: boolean;
-  /** Character, flag or object drawn on top of the dot. Gate Runner's Skia ring falls back to the colors. */
+  /** Character, flag or object drawn on top of the dot. Dot Runner's Skia ring falls back to the colors. */
   emoji?: string;
   category: SkinCategory;
 }

@@ -3,6 +3,9 @@ import { ARENA, canEat, createArena, inputArena, stepArena, zoneRadius, type Orb
 import { createChain, inputChain, stepChain } from '../src/game/motion/chain';
 import { CHARGE, createCharge, inputCharge, stepCharge } from '../src/game/motion/charge';
 import { createDrift, DRIFT, inputDrift, stepDrift } from '../src/game/motion/drift';
+import { createDuel, inputDuel, stepDuel, type DuelState } from '../src/game/motion/duel';
+import { capture, createPaint, inputPaint, PAINT, stepPaint } from '../src/game/motion/paint';
+import { createStack, inputStack, STACK, stepStack } from '../src/game/motion/stack';
 import { cellCenter, createFlow, FLOW, inputFlow, stepFlow } from '../src/game/motion/flow';
 import { createSwipe, inputSwipe, stepSwipe, swipeDir, visibleColor } from '../src/game/motion/swipe';
 import { createTilt, inputTilt, stepTilt, TILT } from '../src/game/motion/tilt';
@@ -207,5 +210,94 @@ describe('arena', () => {
     const end = stepArena({ ...s, elapsed: ARENA.matchTime - 0.01, orbs: [{ ...me, mass: 999 }] }, 0.02);
     expect(end).toMatchObject({ phase: 'over', rank: 1 });
     expect(end.score).toBeGreaterThanOrEqual(999 + 125);
+  });
+});
+
+test('stack: daring releases score more, touching the stack ends the run', () => {
+  let s = run(createStack(1));
+  s = inputStack(s, { type: 'down', x: 0, y: 0 });
+  s = { ...s, cur: STACK.outer - STACK.thick - 2 };
+  s = inputStack(s, { type: 'up', x: 0, y: 0 });
+  expect(s).toMatchObject({ score: 3, perfect: true, rings: [STACK.outer - STACK.thick - 2] });
+  s = inputStack(s, { type: 'down', x: 0, y: 0 });
+  s = { ...s, cur: 40 };
+  s = inputStack(s, { type: 'up', x: 0, y: 0 });
+  expect(s.score).toBe(4);
+  s = inputStack(s, { type: 'down', x: 0, y: 0 });
+  for (let i = 0; i < 200 && s.phase === 'running'; i++) s = stepStack(s, 0.02);
+  expect(s.phase).toBe('over');
+  const tiny = inputStack(inputStack(run(createStack(1)), { type: 'down', x: 0, y: 0 }), { type: 'up', x: 0, y: 0 });
+  expect(tiny).toMatchObject({ score: 0, note: 'Too small' });
+  let full = { ...run(createStack(1)), rings: [30], holding: true, cur: 14 };
+  full = inputStack(full, { type: 'up', x: 0, y: 0 });
+  expect(full).toMatchObject({ level: 2, rings: [] });
+});
+
+test('duel: each half steers its own paddle; goals count and five wins', () => {
+  let s: DuelState = { ...run(createDuel(3)), mode: 'duo', serve: 0 };
+  s = inputDuel(s, {
+    type: 'touches',
+    points: [
+      { x: 50, y: 300 },
+      { x: 250, y: 20 },
+    ],
+  });
+  for (let i = 0; i < 30; i++) s = stepDuel(s, 1 / 60);
+  expect(s.paddles[0].x).toBeLessThan(100);
+  expect(s.paddles[1].x).toBeGreaterThan(220);
+  const bot = inputDuel({ ...run(createDuel(3)) }, { type: 'touches', points: [{ x: 250, y: 20 }] });
+  expect(bot.targets[1]).toBeNull();
+  const goal = stepDuel({ ...s, puck: { x: 160, y: -20, vx: 0, vy: -100 }, goals: [4, 2] }, 0.016);
+  expect(goal).toMatchObject({ phase: 'over', winner: 0, score: 5 });
+  const conceded = stepDuel({ ...s, puck: { x: 160, y: 340, vx: 0, vy: 100 } }, 0.016);
+  expect(conceded.goals).toEqual([0, 1]);
+  expect(conceded.serve).toBeGreaterThan(0);
+  const wall = stepDuel({ ...s, puck: { x: 5, y: 160, vx: -200, vy: 0 } }, 0.016);
+  expect(wall.puck.vx).toBeGreaterThan(0);
+});
+
+describe('paint', () => {
+  test('closing a loop claims the enclosed land', () => {
+    const s = createPaint(1, 'Tammar');
+    expect(s.painters[0].name).toBe('Tammar');
+    const owner = s.owner.map(() => -1);
+    const trail = s.trail.map(() => -1);
+    const N = PAINT.size;
+    owner[5 * N + 5] = 0;
+    for (const [x, y] of [
+      [6, 5],
+      [7, 5],
+      [7, 6],
+      [7, 7],
+      [6, 7],
+      [5, 7],
+      [5, 6],
+    ])
+      trail[y * N + x] = 0;
+    const t = { ...s, owner, trail };
+    capture(t, 0);
+    expect(t.owner[6 * N + 6]).toBe(0);
+    expect(t.owner.filter((o) => o === 0)).toHaveLength(9);
+    expect(t.trail.every((v) => v === -1)).toBe(true);
+  });
+  test('swipes steer without reversing, and crossing your own trail ends the run', () => {
+    let s = run(createPaint(2));
+    s = inputPaint(s, { type: 'down', x: 100, y: 100 });
+    s = inputPaint(s, { type: 'move', x: 140, y: 100 });
+    expect(s.painters[0].next).toBe(1);
+    // Heading up (0): a swipe down would reverse into your own trail, so it is ignored.
+    const back = inputPaint(inputPaint(s, { type: 'down', x: 100, y: 100 }), { type: 'move', x: 100, y: 140 });
+    expect(back.painters[0].next).toBe(1);
+    const me = s.painters[0];
+    const trail = s.trail.slice();
+    trail[(me.y - 1) * PAINT.size + me.x] = 0;
+    let out = { ...s, trail, painters: [{ ...me, dir: 0 as const, next: 0 as const }, ...s.painters.slice(1)] };
+    for (let k = 0; k < 4; k++) out = stepPaint(out, 0.05);
+    expect(out.phase).toBe('over');
+  });
+  test('the match ends on time with a rank', () => {
+    const end = stepPaint({ ...run(createPaint(4)), timeLeft: 0.01 }, 0.02);
+    expect(end.phase).toBe('over');
+    expect(end.rank).toBeGreaterThanOrEqual(1);
   });
 });

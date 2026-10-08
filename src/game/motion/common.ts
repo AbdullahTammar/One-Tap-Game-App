@@ -2,7 +2,11 @@
 export type MotionPhase = 'ready' | 'running' | 'paused' | 'over';
 /** Field coordinates are always in the 0–320 viewBox space. */
 export type MotionInput =
-  { type: 'down' | 'move' | 'up'; x: number; y: number } | { type: 'tilt'; x: number; y: number } | { type: 'action' };
+  | { type: 'down' | 'move' | 'up'; x: number; y: number }
+  | { type: 'tilt'; x: number; y: number }
+  | { type: 'action' }
+  /** Every finger currently on the field, for multi-touch games. Empty when all fingers lift. */
+  | { type: 'touches'; points: { x: number; y: number }[] };
 export interface MotionBase {
   phase: MotionPhase;
   score: number;

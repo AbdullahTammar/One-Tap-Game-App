@@ -4,6 +4,9 @@ import { ARENA, leaderboard, PELLET_COLORS, radiusOf, type ArenaState } from '..
 import { blastRadius, CHAIN, CHAIN_COLORS, type ChainState } from '../game/motion/chain';
 import { CHARGE, chargePower, type ChargeState } from '../game/motion/charge';
 import { DRIFT, type DriftState } from '../game/motion/drift';
+import { DUEL, type DuelState } from '../game/motion/duel';
+import { PAINT, PAINT_COLORS, paintBoard, type PaintState } from '../game/motion/paint';
+import { ceiling, STACK, type StackState } from '../game/motion/stack';
 import { cellCenter, FLOW_COLORS, type FlowState } from '../game/motion/flow';
 import { createMotion, type AnyMotion, type MotionId } from '../game/motion';
 import { SWIPE_COLORS, visibleColor, type SwipeState } from '../game/motion/swipe';
@@ -62,6 +65,12 @@ export const MotionArt = memo(function MotionArt({
         <ChainView s={s as ChainState} {...o} />
       ) : id === 'flow' ? (
         <FlowView s={s as FlowState} {...o} />
+      ) : id === 'stack' ? (
+        <StackView s={s as StackState} {...o} />
+      ) : id === 'duel' ? (
+        <DuelView s={s as DuelState} {...o} />
+      ) : id === 'paint' ? (
+        <PaintView s={s as PaintState} {...o} />
       ) : (
         <TiltView s={s as TiltState} {...o} />
       )}
@@ -374,12 +383,14 @@ function ArenaView({ s, orbFill, orbStroke, orbEmoji }: { s: ArenaState } & Orb)
                 emoji={mine ? orbEmoji : o.emoji}
                 strokeWidth={o.dashT > 0 ? 4 : 2}
               />
-              {rr * k > 9 && (
+              {rr * k > 8 && (
                 <SvgText
                   fontFamily={fonts.bodyBold}
                   x={tx(o.x)}
                   y={(mine ? orbEmoji : o.emoji) ? ty(o.y) + rr * k + 13 : ty(o.y) + 4}
-                  fontSize={Math.min(14, Math.max(10, rr * k * 0.55))}
+                  fontSize={
+                    (mine ? orbEmoji : o.emoji) ? 11 : Math.min(14, (rr * k * 1.7) / Math.max(3, o.name.length))
+                  }
                   fill={mine && !orbEmoji ? colors.ground : colors.white}
                   textAnchor="middle"
                 >
@@ -416,6 +427,166 @@ function ArenaView({ s, orbFill, orbStroke, orbEmoji }: { s: ArenaState } & Orb)
       ))}
       <SvgText fontFamily={fonts.bodyBold} x={14} y={24} fontSize={12} fill={colors.textMuted}>
         {`${Math.max(0, Math.ceil(ARENA.matchTime - s.elapsed))}s · #${s.rank}`}
+      </SvgText>
+    </>
+  );
+}
+
+const STACK_COLORS = ['#7A9CFF', '#B48CFF', '#FF7AD9', '#FF8A4C', '#FFC94D', '#C8F560', '#4CE0B3', '#5AC8FA'];
+function StackView({ s, orbFill, orbStroke, orbEmoji, color }: { s: StackState } & Orb) {
+  const room = ceiling(s);
+  return (
+    <>
+      <Circle cx={160} cy={160} r={STACK.outer + 4} stroke={colors.outline} strokeWidth={2} fill="none" />
+      {s.rings.map((r, i) => (
+        <Circle
+          key={i}
+          cx={160}
+          cy={160}
+          r={r + STACK.thick / 2}
+          stroke={STACK_COLORS[i % STACK_COLORS.length]}
+          strokeWidth={STACK.thick}
+          strokeDasharray={i % 2 ? '14 6' : undefined}
+          fill="none"
+          transform={`rotate(${(s.spin * (i % 2 ? -40 : 40)) % 360} 160 160)`}
+        />
+      ))}
+      {/* The danger line: the inside edge of the last ring. */}
+      <Circle
+        cx={160}
+        cy={160}
+        r={room}
+        stroke={colors.danger}
+        strokeOpacity={0.35}
+        strokeDasharray="2 6"
+        fill="none"
+      />
+      {s.cur > 0 && (
+        <Circle
+          cx={160}
+          cy={160}
+          r={s.cur + STACK.thick / 2}
+          stroke={s.phase === 'over' ? colors.danger : color}
+          strokeWidth={STACK.thick}
+          fill="none"
+        />
+      )}
+      <SkinDot cx={160} cy={160} r={orbEmoji ? 11 : 7} fill={orbFill} stroke={orbStroke} emoji={orbEmoji} />
+      <SvgText fontFamily={fonts.bodyBold} x={20} y={30} fill={colors.textMuted} fontSize={15}>
+        {`LV ${s.level}`}
+      </SvgText>
+    </>
+  );
+}
+
+function DuelView({ s, orbFill, orbStroke, orbEmoji }: { s: DuelState } & Orb) {
+  const g = DUEL.goalHalf;
+  const bot = s.mode === 'bot';
+  return (
+    <>
+      <Line x1={0} y1={160} x2={320} y2={160} stroke={colors.outline} strokeWidth={2} strokeDasharray="6 6" />
+      <Circle cx={160} cy={160} r={36} stroke={colors.outline} strokeWidth={2} fill="none" />
+      <Rect x={160 - g} y={-4} width={g * 2} height={10} rx={5} fill="#FF5E7E" />
+      <Rect x={160 - g} y={314} width={g * 2} height={10} rx={5} fill="#5AC8FA" />
+      <SvgText fontFamily={fonts.bodyBold} x={18} y={150} fill="#FF5E7E" fontSize={22}>
+        {s.goals[1]}
+      </SvgText>
+      <SvgText fontFamily={fonts.bodyBold} x={18} y={186} fill="#5AC8FA" fontSize={22}>
+        {s.goals[0]}
+      </SvgText>
+      <SvgText fontFamily={fonts.bodyBold} x={302} y={150} fill={colors.textFaint} fontSize={11} textAnchor="end">
+        {bot ? 'BOT' : 'PLAYER 2'}
+      </SvgText>
+      <SvgText fontFamily={fonts.bodyBold} x={302} y={180} fill={colors.textFaint} fontSize={11} textAnchor="end">
+        {bot ? 'YOU' : 'PLAYER 1'}
+      </SvgText>
+      <Circle
+        cx={s.paddles[1].x}
+        cy={s.paddles[1].y}
+        r={DUEL.paddle}
+        fill="#FF5E7E"
+        fillOpacity={0.25}
+        stroke="#FF5E7E"
+        strokeWidth={4}
+      />
+      <Circle
+        cx={s.paddles[0].x}
+        cy={s.paddles[0].y}
+        r={DUEL.paddle}
+        fill="#5AC8FA"
+        fillOpacity={0.25}
+        stroke="#5AC8FA"
+        strokeWidth={4}
+      />
+      <SkinDot cx={s.puck.x} cy={s.puck.y} r={DUEL.puck} fill={orbFill} stroke={orbStroke} emoji={orbEmoji} />
+    </>
+  );
+}
+
+function PaintView({ s, orbFill, orbStroke, orbEmoji }: { s: PaintState } & Orb) {
+  const N = PAINT.size;
+  const c = PAINT.cell;
+  // Merge runs of equal cells per row so a full board is a few dozen rects, not a thousand.
+  const runs: { x: number; y: number; w: number; o: number; trail: boolean }[] = [];
+  for (const [grid, trail] of [
+    [s.owner, false],
+    [s.trail, true],
+  ] as const)
+    for (let y = 0; y < N; y++) {
+      let x = 0;
+      while (x < N) {
+        const o = grid[y * N + x];
+        let w = 1;
+        while (x + w < N && grid[y * N + x + w] === o) w++;
+        if (o >= 0) runs.push({ x, y, w, o, trail });
+        x += w;
+      }
+    }
+  const colorOf = (id: number) => (id === 0 ? orbFill : PAINT_COLORS[id % PAINT_COLORS.length]);
+  const board = paintBoard(s).slice(0, 3);
+  return (
+    <>
+      {runs.map((r, i) => (
+        <Rect
+          key={i}
+          x={r.x * c}
+          y={r.y * c}
+          width={r.w * c}
+          height={c}
+          fill={colorOf(r.o)}
+          fillOpacity={r.trail ? 0.45 : r.o === 0 ? 0.55 : 0.4}
+        />
+      ))}
+      {s.painters.map((p) =>
+        p.alive ? (
+          <SkinDot
+            key={p.id}
+            cx={p.x * c + c / 2}
+            cy={p.y * c + c / 2}
+            r={p.id === 0 ? 8 : 7}
+            fill={colorOf(p.id)}
+            stroke={p.id === 0 ? orbStroke : colors.white}
+            emoji={p.id === 0 ? orbEmoji : p.emoji}
+            strokeWidth={p.id === 0 ? 2.5 : 1}
+          />
+        ) : null,
+      )}
+      <Rect x={200} y={6} width={114} height={52} rx={10} fill={colors.ground} fillOpacity={0.7} />
+      {board.map(({ p, pct }, i) => (
+        <SvgText
+          fontFamily={fonts.bodyBold}
+          key={p.id}
+          x={306}
+          y={22 + i * 15}
+          fontSize={11}
+          textAnchor="end"
+          fill={p.id === 0 ? '#FF7AD9' : colors.textMuted}
+        >
+          {`${i + 1}. ${p.name} ${pct}%`}
+        </SvgText>
+      ))}
+      <SvgText fontFamily={fonts.bodyBold} x={10} y={20} fontSize={12} fill={colors.textMuted}>
+        {`${Math.max(0, Math.ceil(s.timeLeft))}s · ${s.pct}%`}
       </SvgText>
     </>
   );
