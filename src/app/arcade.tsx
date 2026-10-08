@@ -10,6 +10,7 @@ import { getSkin } from '../game/skins';
 import { haptic, playSfx } from '../services/feedback';
 import { useArcadeProgress } from '../state/arcade';
 import { useProgress } from '../state/progress';
+import { useAchievements } from '../state/achievements';
 import { colors, fonts } from '../theme';
 
 export default function ArcadeRoute() {
@@ -46,6 +47,7 @@ function ArcadeGame({ meta }: { meta: (typeof ARCADE_GAMES)[number] }) {
         haptic('light');
       }
       if (next.phase === 'over' && previous.phase !== 'over') {
+        useAchievements.getState().reportGame({ id: meta.id, score: next.score });
         playSfx('miss');
         haptic('error');
       }

@@ -28,6 +28,7 @@ import { maybeShowInterstitial, showRewarded, useAdState } from '../services/ads
 import { haptic, playSfx } from '../services/feedback';
 import { maybeRequestReview } from '../services/review';
 import { useProgress } from '../state/progress';
+import { useAchievements } from '../state/achievements';
 import { useRun } from '../state/run';
 import { useAccent } from '../state/settings';
 import { colors, fonts } from '../theme';
@@ -90,7 +91,11 @@ export default function Play() {
           haptic('error');
           const run = { score: s.score, perfects: s.perfects, topSpeed: +(s.topSpeed / s.baseSpeed).toFixed(1) };
           const progress = useProgress.getState();
+          const firstMiss = !recorded.current;
           const outcome = recorded.current ? progress.amendRun(recorded.current, run) : progress.recordRun(run);
+          // A continued run is the same game, so it only counts once toward plays; bests are re-checked either way.
+          if (firstMiss) useAchievements.getState().reportGame({ id: 'runner', score: s.score });
+          else useAchievements.getState().refresh();
           recorded.current = { at: outcome.at, score: s.score, perfects: s.perfects, coinsEarned: outcome.coinsEarned };
           useRun.getState().setLast({
             score: s.score,

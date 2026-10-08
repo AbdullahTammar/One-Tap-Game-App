@@ -10,6 +10,8 @@ import { ECONOMY } from '../../game/constants';
 import { MOTION_GAMES } from '../../game/motion';
 import { getSkin } from '../../game/skins';
 import { useArcadeProgress } from '../../state/arcade';
+import { useAchievements } from '../../state/achievements';
+import { ACHIEVEMENTS } from '../../game/achievements';
 import { useProgress } from '../../state/progress';
 import { liveStreak } from '../../state/progressLogic';
 import { useAccent } from '../../state/settings';
@@ -25,6 +27,7 @@ export default function Home() {
   const daily = useProgress((s) => (s.dailyDay === dayKey() ? s.dailyGates : 0));
   const claimed = useProgress((s) => s.dailyDay === dayKey() && s.dailyClaimed);
   const skin = getSkin(equipped);
+  const trophies = useAchievements((s) => Object.keys(s.unlocked).length);
   const goal = ECONOMY.dailyGoalGates;
   return (
     <Screen>
@@ -44,6 +47,22 @@ export default function Home() {
           </AppText>
           <AppText>Fourteen ways to play. Tap, drag, swipe, draw, tilt, battle — or duel a friend.</AppText>
         </View>
+        <ScalePressable
+          onPress={() => router.push('/achievements')}
+          accessibilityLabel={`Achievements, ${trophies} of ${ACHIEVEMENTS.length} unlocked`}
+          style={styles.trophies}
+        >
+          <AppText style={{ fontSize: 28 }}>🏆</AppText>
+          <View style={{ flex: 1, gap: 6 }}>
+            <Row style={styles.header}>
+              <AppText variant="bodyStrong">Achievements</AppText>
+              <AppText variant="label">
+                {trophies}/{ACHIEVEMENTS.length}
+              </AppText>
+            </Row>
+            <ProgressBar value={trophies / ACHIEVEMENTS.length} />
+          </View>
+        </ScalePressable>
         <Card style={styles.featured}>
           <Row style={styles.header}>
             <AppText variant="overline" color={accent}>
@@ -177,6 +196,16 @@ const styles = StyleSheet.create({
     borderColor: colors.divider,
   },
   spotlight: { borderColor: '#4CE0B3', borderWidth: 1.5 },
+  trophies: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: 16,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.divider,
+  },
   grid: { flexDirection: 'row', gap: 12, flexWrap: 'wrap' },
   stat: { flex: 1, minWidth: 125, gap: 8 },
   cardValue: { fontFamily: fonts.displaySemi, fontSize: 17, color: colors.text },
