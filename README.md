@@ -2,7 +2,7 @@
 
 Four circle games, one tap: Dot Runner (the original), Dot Pulse, Dot Switch, and Dot Lock. Choose a game from the library and build a separate personal best in each. See [the collection guide](docs/CIRCLE_COLLECTION.md) for controls and screenshots.
 
-**Move & Play: 10 more Dot games.** Dot Arena (agar-style battle), Dot Paint (territory battle), Dot Duel (2 players on one phone), Dot Drift, Dot Jump, Dot Sort, Dot Chain, Dot Link, Dot Maze and Dot Stack. Also included: 94 skins (characters, monsters and country flags), 26 achievements, and a dot name for battle leaderboards. See [the Move & Play guide](docs/MOVE_AND_PLAY.md).
+**Move & Play: 10 more Dot games.** Dot Arena (agar-style battle), Dot Paint (territory battle), Dot Duel (2 players on one phone), Dot Drift, Dot Jump, Dot Sort, Dot Chain, Dot Link, Dot Maze and Dot Stack. Also included: 94 skins (characters, monsters and country flags), 26 achievements, and a dot name for battle leaderboards. See [the Move & Play guide](docs/MOVE_AND_PLAY.md) and the [online multiplayer design](docs/online/README.md).
 
 <p><img src="docs/screenshots/game-arena.jpg" width="180" alt="Dot Arena"> <img src="docs/screenshots/game-paint.jpg" width="180" alt="Dot Paint"> <img src="docs/screenshots/game-duel.jpg" width="180" alt="Dot Duel"> <img src="docs/screenshots/skins-flags.jpg" width="180" alt="Flag skins"> <img src="docs/screenshots/achievements.jpg" width="180" alt="Achievements"></p>
 
