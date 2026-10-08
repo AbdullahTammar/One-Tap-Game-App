@@ -133,6 +133,7 @@ function ArcadeGame({ meta }: { meta: (typeof ARCADE_GAMES)[number] }) {
             size={size}
             state={state}
             orbFill={skin.fill}
+            orbEmoji={skin.emoji}
             orbStroke={skin.stroke}
           />
         </Pressable>

@@ -3,6 +3,7 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
+import { SkinDot } from './SkinDot';
 
 import { RING } from '../game/constants';
 import { useProgress } from '../state/progress';
@@ -85,11 +86,29 @@ export function ProgressBar({ value, height = 6, color }: { value: number; heigh
 }
 
 /** Small orb-on-ring badge used by skin tiles and the next-unlock card. */
-export function OrbBadge({ fill, stroke, size = 40 }: { fill: string; stroke: string; size?: number }) {
+export function OrbBadge({
+  fill,
+  stroke,
+  emoji,
+  size = 40,
+}: {
+  fill: string;
+  stroke: string;
+  emoji?: string;
+  size?: number;
+}) {
   return (
     <Svg width={size} height={size} viewBox="0 0 56 56">
       <Circle cx={28} cy={30} r={19} fill="none" stroke={colors.ringSlot} strokeWidth={5} />
-      <Circle cx={28} cy={11} r={8} fill={fill} stroke={stroke} strokeWidth={2.5} />
+      <SkinDot
+        cx={28}
+        cy={emoji ? 14 : 11}
+        r={emoji ? 12 : 8}
+        fill={fill}
+        stroke={stroke}
+        emoji={emoji}
+        strokeWidth={2.5}
+      />
     </Svg>
   );
 }
@@ -104,12 +123,14 @@ export function RingPreview({
   size,
   orbFill = colors.white,
   orbStroke = colors.ground,
+  orbEmoji,
   orbAngle = -Math.PI * 0.62,
   children,
 }: {
   size: number;
   orbFill?: string;
   orbStroke?: string;
+  orbEmoji?: string;
   orbAngle?: number;
   children?: ReactNode;
 }) {
@@ -136,12 +157,13 @@ export function RingPreview({
           strokeWidth={stroke}
           strokeLinecap="round"
         />
-        <Circle
+        <SkinDot
           cx={o.x}
           cy={o.y}
-          r={RING.orbRadius}
+          r={orbEmoji ? RING.orbRadius * 1.6 : RING.orbRadius}
           fill={orbFill}
-          stroke={orbStroke === orbFill ? colors.ground : orbStroke}
+          stroke={orbStroke === orbFill && !orbEmoji ? colors.ground : orbStroke}
+          emoji={orbEmoji}
           strokeWidth={RING.orbOutline}
         />
       </Svg>

@@ -193,6 +193,7 @@ function MotionGame({ meta }: { meta: MotionMeta }) {
               size={size}
               state={state}
               orbFill={skin.fill}
+              orbEmoji={skin.emoji}
               orbStroke={skin.stroke}
             />
           </View>

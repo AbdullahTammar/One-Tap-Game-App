@@ -16,6 +16,8 @@ export interface Orb {
   id: number;
   name: string;
   color: string;
+  /** Character skin, if any. Bots wear random fun skins so the arena looks alive. */
+  emoji?: string;
   x: number;
   y: number;
   mass: number;
@@ -81,6 +83,7 @@ const BOT_NAMES = [
   'Juno',
   'Sumo',
 ];
+const BOT_EMOJI = ['👾', '🐸', '😎', '👻', '🤖', '🐱', '🍩', '⚽', '🦊', '👽', '🍕', '🐼', '🔥'];
 const BOT_COLORS = ['#FF5E7E', '#5AC8FA', '#FF8A4C', '#B48CFF', '#FFC94D', '#4CE0B3', '#FF7AD9'];
 
 export const radiusOf = (mass: number) => 4 * Math.sqrt(mass);
@@ -112,10 +115,13 @@ function zoneSpot(s: ArenaState) {
 }
 function makeOrb(s: ArenaState, name: string, color: string, mass: number): Orb {
   const p = zoneSpot(s);
+  const id = s.nextId++;
   return {
-    id: s.nextId++,
+    id,
     name,
     color,
+    // About half the bots wear a fun skin; the player's look comes from the equipped skin.
+    emoji: id > 0 && rand(s) < 0.5 ? BOT_EMOJI[id % BOT_EMOJI.length] : undefined,
     ...p,
     mass,
     vx: 0,

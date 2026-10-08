@@ -1,13 +1,14 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { AppText } from '../../components/AppText';
 import { PrimaryButton, ScalePressable } from '../../components/Buttons';
 import { CoinChip, OrbBadge, Row, Screen } from '../../components/UI';
-import { getSkin, SKINS } from '../../game/skins';
+import { SkinDot } from '../../components/SkinDot';
+import { getSkin, MYSTERY_PRICE, mysteryPick, SKIN_CATEGORIES, SKINS, type SkinCategory } from '../../game/skins';
 import { haptic, playSfx } from '../../services/feedback';
 import { useProgress } from '../../state/progress';
 import { useAccent } from '../../state/settings';
@@ -22,6 +23,18 @@ export default function Skins() {
   const owned = useProgress((s) => s.owned);
   const equipped = useProgress((s) => s.equipped);
   const [selected, setSelected] = useState(equipped);
+  const [category, setCategory] = useState<SkinCategory>(() => getSkin(equipped).category);
+  const shown = SKINS.filter((sk) => sk.category === category);
+  const mysteryLeft = mysteryPick(owned, 0) !== null;
+  const openMystery = () => {
+    const won = useProgress.getState().buyMystery();
+    if (!won) return;
+    playSfx('unlock');
+    haptic('success');
+    setCategory(won.category);
+    setSelected(won.id);
+    Alert.alert('Mystery unlocked!', `You got ${won.emoji ?? ''} ${won.name}. It is now equipped.`);
+  };
   const cur = getSkin(selected);
   const curOwned = owned.includes(cur.id);
 
@@ -86,7 +99,15 @@ export default function Skins() {
                 strokeWidth={22}
                 strokeLinecap="round"
               />
-              <Circle cx={150} cy={30} r={26} fill={cur.fill} stroke={cur.stroke} strokeWidth={6} />
+              <SkinDot
+                cx={150}
+                cy={cur.emoji ? 40 : 30}
+                r={cur.emoji ? 40 : 26}
+                fill={cur.fill}
+                stroke={cur.stroke}
+                emoji={cur.emoji}
+                strokeWidth={6}
+              />
             </Svg>
           </Animated.View>
           <View style={{ gap: 6, flex: 1 }}>
@@ -98,8 +119,56 @@ export default function Skins() {
         </View>
       </View>
 
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chips}
+        style={styles.chipBar}
+      >
+        {SKIN_CATEGORIES.map((c) => (
+          <ScalePressable
+            key={c}
+            feedback={false}
+            onPress={() => setCategory(c)}
+            accessibilityState={{ selected: c === category }}
+            accessibilityLabel={`${c} skins`}
+            style={[styles.chip, c === category && { backgroundColor: accent }]}
+          >
+            <AppText
+              variant="bodyStrong"
+              style={{ fontSize: 13 }}
+              color={c === category ? colors.ground : colors.textSoft}
+            >
+              {c}
+            </AppText>
+          </ScalePressable>
+        ))}
+      </ScrollView>
       <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
-        {SKINS.map((sk) => {
+        {category !== 'Classic' && category !== 'Flags' && (
+          <ScalePressable
+            onPress={openMystery}
+            disabled={!mysteryLeft || coins < MYSTERY_PRICE}
+            accessibilityLabel={`Mystery skin for ${MYSTERY_PRICE} coins`}
+            style={[
+              styles.mystery,
+              { borderColor: accent },
+              (!mysteryLeft || coins < MYSTERY_PRICE) && { opacity: 0.5 },
+            ]}
+          >
+            <AppText style={{ fontSize: 34 }}>🎁</AppText>
+            <View style={{ flex: 1, gap: 2 }}>
+              <AppText variant="bodyStrong">Mystery skin</AppText>
+              <AppText variant="label">
+                {mysteryLeft ? 'A random character, monster or more' : 'You own every fun skin!'}
+              </AppText>
+            </View>
+            <AppText variant="bodyStrong" color={accent}>
+              {formatNumber(MYSTERY_PRICE)}
+            </AppText>
+          </ScalePressable>
+        )}
+        {shown.map((sk) => {
           const isOwned = owned.includes(sk.id);
           const isEquipped = sk.id === equipped;
           const isSelected = sk.id === selected;
@@ -113,7 +182,7 @@ export default function Skins() {
               accessibilityLabel={`${sk.name}, ${isEquipped ? 'equipped' : isOwned ? 'owned' : `${sk.price} coins`}`}
               style={[styles.tile, { width: tileWidth, borderColor: isSelected ? accent : colors.surface }]}
             >
-              <OrbBadge fill={sk.fill} stroke={sk.stroke} />
+              <OrbBadge fill={sk.fill} stroke={sk.stroke} emoji={sk.emoji} />
               <AppText variant="bodyStrong" style={{ fontSize: 13 }}>
                 {sk.name}
               </AppText>
@@ -154,6 +223,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 4,
     padding: 6,
+  },
+  chipBar: { flexGrow: 0, marginTop: 14 },
+  chips: { gap: 8, paddingHorizontal: 24 },
+  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: colors.surface },
+  mystery: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: 14,
+    borderRadius: radii.md,
+    borderWidth: 1.5,
+    backgroundColor: colors.surface,
   },
   footer: { paddingHorizontal: 24, paddingBottom: 12, paddingTop: 4 },
 });

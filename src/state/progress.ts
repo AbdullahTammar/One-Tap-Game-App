@@ -2,11 +2,12 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import { ECONOMY } from '../game/constants';
-import { DEFAULT_SKIN_ID, STARTER_SKIN_IDS } from '../game/skins';
+import { DEFAULT_SKIN_ID, STARTER_SKIN_IDS, type Skin } from '../game/skins';
 import { dayKey } from '../utils/date';
 import {
   amendRun,
   applyRun,
+  buyMystery,
   rollDay,
   selectSkin,
   type ProgressData,
@@ -38,6 +39,7 @@ interface ProgressActions {
   /** Grants the coin difference when a finished run is upgraded to "doubled". */
   addCoins: (amount: number) => void;
   selectSkin: (id: string) => SkinAction;
+  buyMystery: () => Skin | null;
   refreshDay: () => void;
   reset: () => void;
 }
@@ -63,6 +65,11 @@ export const useProgress = create<ProgressData & ProgressActions>()(
         const { next, action } = selectSkin(get(), id);
         if (action !== 'noop' && action !== 'insufficient') set(next);
         return action;
+      },
+      buyMystery: () => {
+        const { next, skin } = buyMystery(get(), Math.random());
+        if (skin) set(next);
+        return skin;
       },
       refreshDay: () => {
         const p = get();

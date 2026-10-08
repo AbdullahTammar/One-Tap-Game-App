@@ -2,7 +2,7 @@
  * Pure progression rules (no React, no storage) so they are trivially testable.
  */
 import { ECONOMY } from '../game/constants';
-import { getSkin } from '../game/skins';
+import { getSkin, MYSTERY_PRICE, mysteryPick, type Skin } from '../game/skins';
 import { dayKey, daysBetween } from '../utils/date';
 
 export interface RunRecord {
@@ -166,5 +166,16 @@ export function selectSkin(p: ProgressData, id: string): { next: ProgressData; a
   return {
     next: { ...p, coins: p.coins - skin.price, owned: [...p.owned, id], equipped: id },
     action: 'unlocked',
+  };
+}
+
+/** Spends the mystery price on a random locked skin and equips it. */
+export function buyMystery(p: ProgressData, roll: number): { next: ProgressData; skin: Skin | null } {
+  if (p.coins < MYSTERY_PRICE) return { next: p, skin: null };
+  const skin = mysteryPick(p.owned, roll);
+  if (!skin) return { next: p, skin: null };
+  return {
+    next: { ...p, coins: p.coins - MYSTERY_PRICE, owned: [...p.owned, skin.id], equipped: skin.id },
+    skin,
   };
 }

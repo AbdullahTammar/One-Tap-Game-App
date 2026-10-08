@@ -52,7 +52,7 @@ export default function Home() {
             <AppText variant="label">Best {best}</AppText>
           </Row>
           <View style={styles.art}>
-            <RingPreview size={180} orbFill={skin.fill} orbStroke={skin.stroke} />
+            <RingPreview size={180} orbFill={skin.fill} orbStroke={skin.stroke} orbEmoji={skin.emoji} />
           </View>
           <AppText variant="heading">Gate Runner</AppText>
           <AppText>Perfect timing. Endless orbit. Tap as your dot crosses the gate.</AppText>
@@ -78,7 +78,14 @@ export default function Home() {
               <AppText variant="label">Best {arcadeBest[game.id]}</AppText>
             </Row>
             <Row style={{ gap: 12, flexWrap: 'wrap' }}>
-              <ArcadeArt id={game.id} color={game.color} size={96} />
+              <ArcadeArt
+                id={game.id}
+                color={game.color}
+                size={96}
+                orbFill={skin.fill}
+                orbStroke={skin.stroke}
+                orbEmoji={skin.emoji}
+              />
               <View style={{ flex: 1, minWidth: 140, gap: 7 }}>
                 <AppText variant="heading" style={{ fontSize: 20 }}>
                   {game.name}
@@ -117,6 +124,7 @@ export default function Home() {
                 color={game.color}
                 size={index === 0 ? 150 : 96}
                 orbFill={skin.fill}
+                orbEmoji={skin.emoji}
                 orbStroke={skin.stroke}
               />
               <View style={{ flex: 1, minWidth: 140, gap: 7 }}>
