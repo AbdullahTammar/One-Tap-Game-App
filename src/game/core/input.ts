@@ -10,6 +10,9 @@ export interface InputState {
   time: Float64Array;
   startX: Float64Array;
   startY: Float64Array;
+  velocityX: Float64Array;
+  velocityY: Float64Array;
+  velocityTime: Float64Array;
   down: number;
   up: number;
   cancelled: boolean;
@@ -29,6 +32,9 @@ export function createInput(pathCapacity = 512): InputState {
     time: new Float64Array(TOUCH_CAPACITY),
     startX: new Float64Array(TOUCH_CAPACITY),
     startY: new Float64Array(TOUCH_CAPACITY),
+    velocityX: new Float64Array(TOUCH_CAPACITY),
+    velocityY: new Float64Array(TOUCH_CAPACITY),
+    velocityTime: new Float64Array(TOUCH_CAPACITY),
     down: 0,
     up: 0,
     cancelled: false,
@@ -47,6 +53,7 @@ export function clearInput(s: InputState) {
   s.cancelled = false;
   s.vx.fill(0);
   s.vy.fill(0);
+  s.velocityTime.fill(0);
   s.flingX = 0;
   s.flingY = 0;
   s.path.head = 0;
@@ -75,14 +82,24 @@ export function writeTouch(s: InputState, id: number, x: number, y: number, ms: 
     s.active[slot] = 1;
     s.startX[slot] = x;
     s.startY[slot] = y;
+    s.velocityX[slot] = x;
+    s.velocityY[slot] = y;
+    s.velocityTime[slot] = ms;
     s.vx[slot] = 0;
     s.vy[slot] = 0;
     s.down |= 1 << slot;
   } else {
-    const dt = (ms - s.time[slot]) / 1000;
-    if (dt > 0) {
-      s.vx[slot] = (x - s.x[slot]) / dt;
-      s.vy[slot] = (y - s.y[slot]) / dt;
+    // Aggregate movement across at least 8 ms; EMA has a 24 ms time constant.
+    // Equal/backward timestamps update position but never divide by near-zero dt.
+    const elapsed = ms - s.velocityTime[slot];
+    if (elapsed >= 8) {
+      const dt = elapsed / 1000,
+        weight = 1 - Math.exp(-elapsed / 24);
+      s.vx[slot] += ((x - s.velocityX[slot]) / dt - s.vx[slot]) * weight;
+      s.vy[slot] += ((y - s.velocityY[slot]) / dt - s.vy[slot]) * weight;
+      s.velocityX[slot] = x;
+      s.velocityY[slot] = y;
+      s.velocityTime[slot] = ms;
     }
   }
   s.x[slot] = x;

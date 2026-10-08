@@ -10,10 +10,11 @@ export interface Clock {
   paused: boolean;
   fresh: boolean;
   dropped: number;
+  holdLatest: boolean;
 }
 export const DEFAULT_CLOCK: ClockConfig = { step: 1 / 120, maxDelta: 0.05, maxSubsteps: 8 };
 export function createClock(): Clock {
-  return { accumulator: 0, alpha: 0, tick: 0, paused: true, fresh: true, dropped: 0 };
+  return { accumulator: 0, alpha: 0, tick: 0, paused: true, fresh: true, dropped: 0, holdLatest: false };
 }
 export function validateClock(c: ClockConfig) {
   if (
@@ -30,19 +31,23 @@ export function pauseClock(c: Clock) {
   'worklet';
   c.paused = true;
   c.accumulator = 0;
-  c.alpha = 0;
+  c.alpha = 1;
+  c.holdLatest = true;
   c.fresh = true;
 }
 export function resumeClock(c: Clock) {
   'worklet';
   c.paused = false;
   c.accumulator = 0;
-  c.alpha = 0;
+  c.alpha = 1;
+  c.holdLatest = true;
   c.fresh = true;
 }
 export function resetClock(c: Clock) {
   'worklet';
   pauseClock(c);
+  c.alpha = 0;
+  c.holdLatest = false;
   c.tick = 0;
   c.dropped = 0;
 }
@@ -67,6 +72,7 @@ export function planFrame(c: Clock, rawDelta: number, config: ClockConfig): numb
     c.dropped += discarded;
   }
   c.accumulator = Math.max(0, c.accumulator);
-  c.alpha = Math.min(c.accumulator / config.step, 1);
+  if (count > 0) c.holdLatest = false;
+  c.alpha = c.holdLatest ? 1 : Math.min(c.accumulator / config.step, 1);
   return count;
 }

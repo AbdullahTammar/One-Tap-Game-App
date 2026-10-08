@@ -21,8 +21,31 @@ import {
 import { appendPath, clearInput, createInput, swipeDirection, writeTouch } from '../src/game/core/input';
 import { acquire, createPool, createRing, popSlots, pushSlot, release } from '../src/game/core/memory';
 import { createProbe, sampleFrame, summarizeProbe } from '../src/game/core/probe';
+import {
+  createAtomicEventStore,
+  createDeliveryController,
+  createPersistingHandler,
+  type ReceiptSnapshot,
+} from '../src/game/core/delivery';
 
 describe('fixed clock', () => {
+  test('paused interpolation holds latest through resume until first fixed tick', () => {
+    const c = createClock();
+    pauseClock(c);
+    expect(c.alpha).toBe(1);
+    resumeClock(c);
+    planFrame(c, 5, DEFAULT_CLOCK);
+    expect(c.alpha).toBe(1);
+    expect(planFrame(c, 0.001, DEFAULT_CLOCK)).toBe(0);
+    expect(c.alpha).toBe(1);
+    expect(planFrame(c, DEFAULT_CLOCK.step, DEFAULT_CLOCK)).toBe(1);
+    expect(c.alpha).toBeLessThan(1);
+    resetClock(c);
+    expect(c.alpha).toBe(0);
+    expect(c.holdLatest).toBe(false);
+    expect(planFrame(c, 30, DEFAULT_CLOCK)).toBe(0);
+    expect(c.alpha).toBe(0);
+  });
   test('spikes clamp, substep work is bounded and fractional remainder survives', () => {
     const c = createClock(),
       config = { step: 0.01, maxDelta: 0.055, maxSubsteps: 3 };
@@ -40,9 +63,11 @@ describe('fixed clock', () => {
     planFrame(c, 0.01, DEFAULT_CLOCK);
     expect(planFrame(c, 1 / 60, DEFAULT_CLOCK)).toBe(2);
     pauseClock(c);
+    expect(c.alpha).toBe(1);
     expect(planFrame(c, 30, DEFAULT_CLOCK)).toBe(0);
     resumeClock(c);
     expect(planFrame(c, 30, DEFAULT_CLOCK)).toBe(0);
+    expect(c.alpha).toBe(1);
     expect(planFrame(c, 1 / 120, DEFAULT_CLOCK)).toBe(1);
     resetClock(c);
     expect(c.paused).toBe(true);
@@ -180,6 +205,36 @@ describe('event journal: small payloads and no loss/duplicate delivery', () => {
   });
 });
 describe('preallocated memory and input', () => {
+  test('velocity aggregates sub-8ms jitter and smooths the estimate', () => {
+    const s = createInput();
+    writeTouch(s, 1, 0, 0, 100, 0);
+    for (let i = 1; i < 8; i++) writeTouch(s, 1, i, 0, 100 + i, 1);
+    expect(s.x[0]).toBe(7);
+    expect(s.vx[0]).toBe(0);
+    writeTouch(s, 1, 8, 0, 108, 1);
+    expect(s.vx[0]).toBeCloseTo(1000 * (1 - Math.exp(-8 / 24)));
+    const v = s.vx[0];
+    writeTouch(s, 1, 9, 0, 108, 1);
+    writeTouch(s, 1, 10, 0, 107, 1);
+    expect(s.vx[0]).toBe(v);
+    writeTouch(s, 1, 16, 0, 116, 1);
+    expect(s.vx[0]).toBeCloseTo(1000 * (1 - Math.exp(-16 / 24)));
+    writeTouch(s, 1, 16, 0, 116, 2);
+    expect(s.flingX).toBe(s.vx[0]);
+    writeTouch(s, 2, 50, 0, 200, 0);
+    expect(s.vx[0]).toBe(0);
+  });
+  test('steady velocity converges without a 1ms division spike; stationary samples decay', () => {
+    const s = createInput();
+    writeTouch(s, 1, 0, 0, 0, 0);
+    for (let i = 1; i <= 20; i++) writeTouch(s, 1, i * 8, 0, i * 8, 1);
+    expect(s.vx[0]).toBeGreaterThan(998);
+    expect(s.vx[0]).toBeLessThan(1000);
+    const previous = s.vx[0];
+    writeTouch(s, 1, 160, 0, 168, 1);
+    expect(s.vx[0]).toBeLessThan(previous);
+    expect(Number.isFinite(s.vx[0])).toBe(true);
+  });
   test('pool exhaustion, slot reuse and double release protection', () => {
     const p = createPool(2),
       storage = p.free;
@@ -209,7 +264,7 @@ describe('preallocated memory and input', () => {
     writeTouch(s, 42, 10, 20, 100, 0);
     writeTouch(s, 7, 100, 200, 100, 0);
     writeTouch(s, 42, 40, 20, 200, 1);
-    expect(s.vx[0]).toBe(300);
+    expect(s.vx[0]).toBeCloseTo(300 * (1 - Math.exp(-100 / 24)));
     expect(s.y[1]).toBe(200);
     expect(swipeDirection(s, 0)).toBe(1);
     writeTouch(s, 42, 40, 20, 200, 2);
@@ -222,6 +277,92 @@ describe('preallocated memory and input', () => {
     clearInput(s);
     expect(s.active[1]).toBe(0);
     expect(s.path.count).toBe(0);
+  });
+});
+
+describe('bounded event recovery', () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+  test('two automatic retries then recoverable; manual retry can complete same packet', () => {
+    let failing = true;
+    const deliver = jest.fn((_packet: readonly number[]) => {
+      if (failing) throw new Error('Disk unavailable');
+      return 3;
+    });
+    const success = jest.fn(),
+      failure = jest.fn();
+    const controller = createDeliveryController({ deliver, success, failure });
+    const packet = [3, 1, EventKind.gameOver, 20, 0];
+    controller.receive(packet);
+    expect(deliver).toHaveBeenCalledTimes(1);
+    jest.advanceTimersByTime(249);
+    expect(deliver).toHaveBeenCalledTimes(1);
+    jest.advanceTimersByTime(1);
+    expect(deliver).toHaveBeenCalledTimes(2);
+    jest.advanceTimersByTime(500);
+    expect(deliver).toHaveBeenCalledTimes(3);
+    expect(failure.mock.calls[2][1]).toEqual({ status: 'recoverable', message: 'Disk unavailable', retries: 2 });
+    jest.runAllTimers();
+    expect(deliver).toHaveBeenCalledTimes(3);
+    failing = false;
+    controller.retry();
+    expect(success).toHaveBeenCalledWith(3);
+    expect(deliver.mock.calls.every((call) => call[0] === packet)).toBe(true);
+  });
+  test('transient failure recovers automatically and unmount cancels scheduled retries', () => {
+    const deliver = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        throw new Error('Temporary');
+      })
+      .mockReturnValue(1);
+    const success = jest.fn(),
+      failure = jest.fn();
+    const controller = createDeliveryController({ deliver, success, failure });
+    controller.receive([1, 1, EventKind.score, 1, 0]);
+    jest.advanceTimersByTime(250);
+    expect(success).toHaveBeenCalledTimes(1);
+    expect(deliver).toHaveBeenCalledTimes(2);
+    const disposedDeliver = jest.fn(() => {
+      throw new Error('Unavailable');
+    });
+    const disposed = createDeliveryController({ deliver: disposedDeliver, success, failure });
+    disposed.receive([2, 1, EventKind.gameOver, 1, 0]);
+    disposed.dispose();
+    jest.runAllTimers();
+    disposed.retry();
+    expect(disposedDeliver).toHaveBeenCalledTimes(1);
+  });
+  test('atomic (session,sequence) receipt prevents duplicate durable effects after write-then-throw', () => {
+    let saved: ReceiptSnapshot<number> = { data: 0, receipts: {} },
+      failAfterWrite = true;
+    const store = createAtomicEventStore(
+      {
+        read: () => saved,
+        write: (next) => {
+          saved = next;
+          if (failAfterWrite) {
+            failAfterWrite = false;
+            throw new Error('Error after committed write');
+          }
+        },
+      },
+      (coins, event) => coins + (event.type === 'gameOver' ? event.score : 0),
+    );
+    const persist = createPersistingHandler(store);
+    const receiver = createEventReceiver(persist),
+      success = jest.fn(),
+      failure = jest.fn();
+    const controller = createDeliveryController({ deliver: receiver, success, failure });
+    controller.receive([1, 9, EventKind.gameOver, 20, 0]);
+    expect(saved.data).toBe(20);
+    jest.advanceTimersByTime(250);
+    expect(saved.data).toBe(20);
+    expect(success).toHaveBeenCalledWith(1);
+    persist({ type: 'gameOver', score: 20, reason: 0 }, 9, 1);
+    expect(saved.data).toBe(20);
+    persist({ type: 'gameOver', score: 20, reason: 0 }, 10, 1);
+    expect(saved.data).toBe(40);
   });
 });
 test('probe computes quantiles on preallocated scratch and counts deadlines', () => {

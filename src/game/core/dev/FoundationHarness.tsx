@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { router } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 import { Circle } from '@shopify/react-native-skia';
@@ -8,6 +9,7 @@ import { SharedCanvas } from '../rendering';
 import { useFixedEngine, type WorkletEngine } from '../useFixedEngine';
 import { useUIInput } from '../useInput';
 import { PerformanceOverlay, useRenderCounter } from './PerformanceOverlay';
+import { DeliveryRecovery } from '../DeliveryRecovery';
 
 interface Ball {
   x: number;
@@ -70,8 +72,13 @@ export default function FoundationHarness() {
     scale = useSharedValue(1);
   const { input, gesture } = useUIInput(enabled, scale);
   const [score, setScore] = useState(0);
+  const failures = useRef(0);
   const handler = useMemo(
     () => (event: DiscreteEvent) => {
+      if (failures.current > 0) {
+        failures.current--;
+        throw new Error('Injected harness delivery failure');
+      }
       if (event.type === 'score') setScore(event.value);
     },
     [],
@@ -85,6 +92,7 @@ export default function FoundationHarness() {
   return (
     <View style={{ flex: 1, padding: 24, paddingTop: 60, backgroundColor: '#ddd', gap: 12 }}>
       <Text>Foundation only · score {score}</Text>
+      <DeliveryRecovery failure={loop.deliveryFailure} onRetry={loop.retryEvents} onLeave={() => router.back()} />
       <GestureDetector gesture={gesture}>
         <View collapsable={false} accessibilityLabel="Foundation touch field">
           <BallArt state={loop.state} alpha={loop.alpha} />
@@ -101,6 +109,14 @@ export default function FoundationHarness() {
       </Pressable>
       <Pressable onPress={() => alert(count())}>
         <Text>Inspect screen commits</Text>
+      </Pressable>
+      <Pressable
+        onPress={() => {
+          failures.current = 3;
+        }}
+        accessibilityLabel="Inject three delivery failures"
+      >
+        <Text>Fail next delivery · three attempts</Text>
       </Pressable>
       <PerformanceOverlay probe={loop.probe} enabled={loop.probeEnabled} />
     </View>

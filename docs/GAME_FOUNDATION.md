@@ -12,6 +12,7 @@ Commit `2715fb0` captures the pre-existing changes in `__tests__/motion.test.ts`
 `src/components/GameSession.tsx`, plus credential/environment ignore rules.
 Baseline validation: typecheck, lint, 7 suites / 105 tests passed.
 Foundation validation: typecheck and lint passed; 8 suites / 121 tests passed.
+The pre-Step-3 corrections and source audit are in [Foundation safety review](FOUNDATION_SAFETY_REVIEW.md).
 Android development and production exports passed. Development harness/probe
 markers occur in the development JS and are absent from production JS.
 No Git identity existed; a command-local Codex identity was used without changing
@@ -62,8 +63,11 @@ accidental gameplay while an overlay or system screen is open.
 
 `useFixedEngine` wires this to `useFrameCallback`. AppState sends only lifecycle
 transitions to UI, not frame traffic. Input and simulation live on UI; RN reads
-only event packets. Fixed steps mutate shared state through a stable `modify`
-callback. Alpha can animate Skia between ticks without React. The callback stays
+only event packets. A stable frame callback mutates shared objects inside their
+own `modify` scopes. Alpha can animate Skia between ticks without React. Pause
+holds alpha=1 (latest state), including resumed frames before the first tick;
+reset uses alpha=0 and resets previous/current positions to the same initial value.
+The callback stays
 registered while paused to drain pending event batches; it performs no physics.
 Future integrations can deactivate it once paused and fully acknowledged if idle
 battery measurements justify this, preserving the flush-on-exit contract.
@@ -164,19 +168,35 @@ or persistence event. Emit all final score/newBest/achievement events **before**
 gameOver; terminal sessions intentionally refuse further emissions.
 
 RN receiver watermarks suppress repeated successful deliveries. A thrown handler
-sets deliveryError, retains the journal and stops physics. Repair the handler,
-call retryEvents, and explicitly resume if appropriate. Retry copies the same
-immutable in-flight entries. Reset opens a new session but retains prior journal
-entries. Integrations must wait for `pendingEvents==0` before unmount/navigation;
+logs its error on RN in development, sets the shared deliveryError flag, retains
+the journal and pauses physics at the latest state. deliveryFailure is a discrete
+React-visible status with the error message and retry count. The RN controller
+retries the same immutable batch twice (250 ms, then 500 ms); exhaustion exposes
+a recoverable Retry / Leave panel through DeliveryRecovery. Retry restarts that
+bounded budget. Success resumes only if the game was running before the failure
+and no explicit pause/background intervened; otherwise the owner must Resume.
+Timers are cancelled on unmount; Strict Mode effect replay reactivates the
+controller. Reset waits until failures clear and pendingEvents reaches zero.
+It then opens a new session. Integrations must wait for `pendingEvents==0` before unmount/navigation;
 keep the owner mounted behind the results screen while acknowledgments drain.
 Never navigate from an earlier hit/newBest event before final events arrive.
 
 The in-memory guarantee is no dropped/duplicate deliveries for a mounted owner,
 declared bounded emissions and successfully completing synchronous handlers.
-No in-memory bus can guarantee durable exactly-once effects across process death,
-or a handler that writes successfully and then throws. MMKV/zustand handlers
-must use an idempotency key (run ID plus sequence) and an atomic/idempotent
-economy transaction before acknowledging. Async writes need a future explicit
+No in-memory bus can guarantee durable exactly-once effects across process death.
+Persisting handlers must be idempotent by **(session, sequence)**, even when a
+write succeeds and then throws. createAtomicEventStore commits the effect and
+receipt together through a single synchronous snapshot write; createPersistingHandler
+adapts that store to the event receiver. The reducer must be pure/immutable and
+storage must be single-writer and atomic (for MMKV, one JSON value under one key;
+publish zustand state from that committed snapshot). Never store the receipt and
+effect under separate keys. Allocate persistent session IDs/ranges uniquely
+within the store's game/run namespace; the demo's default session=1 is only for
+ephemeral owners and must not collide with a previous durable run. Keep receipts
+until every event from those sessions is acknowledged. A Leave handler must
+preserve/handoff the pending durable journal before unmounting its owner; the
+harness has no durable effects, so its Leave only exits the test route.
+Async writes need a future explicit
 async-ack adapter; do not return a Promise from this synchronous handler contract.
 No existing persistence code changes in this step.
 
@@ -190,11 +210,15 @@ discrete events; avoid speaking every timer sample.
 `useUIInput` uses one Manual gesture with worklet touch callbacks, activating on
 touch-down. Attach with GestureDetector to a non-collapsible field View under the
 existing GestureHandlerRootView. Scale converts local coordinates to game units.
-Ten preallocated slots retain native finger IDs, coordinates, sampled velocity,
+Ten preallocated slots retain native finger IDs, coordinates, smoothed velocity,
 down/up bit latches, swipe origin and fling velocity. Fixed ticks consume latches
 once; touches continuing into later substeps retain positions. Cancel/pause/reset
-clear active touches. Gesture callbacks do not schedule RN. Velocity uses touch
-arrival time; deterministic replay records the resulting tick samples.
+clear active touches. Gesture callbacks do not schedule RN. The installed Gesture
+Handler touch types do not expose a timestamp. Date.now() is retained for arrival
+time, but velocity aggregates displacement over at least 8 ms and applies a 24 ms
+time-constant EMA. Equal/backward timestamps never divide by a tiny delta.
+Positions remain immediate, velocity resets on a new finger slot and release
+retains the smoothed fling. Deterministic replay records the resulting tick samples.
 
 Sort calls swipeDirection on release; gameplay tuning chooses its threshold and
 whether fling velocity matters. Duel assigns a stable finger ID to a paddle on
@@ -250,7 +274,7 @@ static icons, ranks, skins and library artwork.
 The separate `/foundation-probe` route is development-only. It moves a test dot,
 accepts touch-down score events and exposes controls; it does not alter any game.
 
-1. In PowerShell, `Set-Location 'C:\Users\AbdullahTammar\Documents\ChatGPT\One-Tap-Game-App\app'`; run `npm run typecheck`,
+1. From the workspace root in PowerShell, `Set-Location app`; run `npm run typecheck`,
    `npm run lint`, `npm test -- --runInBand`.
 2. Install an existing SDK-57-compatible development build on your physical
    Android phone. If none exists, `npx eas-cli@latest build --profile development

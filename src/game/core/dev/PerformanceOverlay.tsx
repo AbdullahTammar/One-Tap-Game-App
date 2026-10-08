@@ -42,10 +42,14 @@ export function PerformanceOverlay({
           onPress={() => {
             scheduleOnUI(() => {
               'worklet';
-              const p = probe.get();
-              if (!p) return;
-              summarizeProbe(p);
-              scheduleOnRN(update, p.p50, p.p95, p.p99, p.missed60, p.missed120, p.frames);
+              probe.modify((p) => {
+                'worklet';
+                if (p) {
+                  summarizeProbe(p);
+                  scheduleOnRN(update, p.p50, p.p95, p.p99, p.missed60, p.missed120, p.frames);
+                }
+                return p;
+              });
             });
           }}
         >

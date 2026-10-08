@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
-import { useFrameCallback, useSharedValue, type SharedValue } from 'react-native-reanimated';
+import { useFrameCallback, useSharedValue, type FrameInfo, type SharedValue } from 'react-native-reanimated';
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 import {
   createClock,
@@ -12,6 +12,7 @@ import {
   validateClock,
   type ClockConfig,
 } from './clock';
+import { createDeliveryController, type DeliveryFailure } from './delivery';
 import {
   acknowledgeBatch,
   beginSession,
@@ -24,11 +25,13 @@ import {
 } from './events';
 import { clearInput, type InputState } from './input';
 import type { Probe } from './probe';
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- prune the entire probe module in release bundles
-const devProbe: typeof import('./probe') | null = __DEV__ ? require('./probe') : null;
-const sampleDevFrame = __DEV__ ? devProbe?.sampleFrame : null;
 
-/** All methods are pure worklets; step mutates only preallocated state/input/journal. ZERO FRAME-DRIVEN React renders. */
+const DEV_MODE = __DEV__;
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- prune the probe module in release bundles
+const devProbe: typeof import('./probe') | null = __DEV__ ? require('./probe') : null;
+const sampleDevFrame = DEV_MODE ? devProbe?.sampleFrame : null;
+
+/** Pure worklet reset/step; mutate preallocated state/journal only. Zero frame-driven React renders. */
 export interface WorkletEngine<S> {
   create: () => S;
   reset: (state: S) => void;
@@ -48,10 +51,11 @@ export function useFixedEngine<S>(
     engine.maxEventsPerStep * config.maxSubsteps > 256
   )
     throw new Error('Engine frame event budget exceeds journal capacity');
-  const create = engine.create;
+  const { create, step, reset: resetState, maxEventsPerStep } = engine;
   const initialState = useMemo(() => create(), [create]);
   const initialClock = useMemo(() => createClock(), []);
   const initialEvents = useMemo(() => createEventBus(), []);
+  const initialProbe = useMemo<Probe | null>(() => (DEV_MODE && devProbe ? devProbe.createProbe() : null), []);
   const state = useSharedValue(initialState);
   const clock = useSharedValue(initialClock);
   const events = useSharedValue(initialEvents);
@@ -59,13 +63,12 @@ export function useFixedEngine<S>(
   const running = useSharedValue(false);
   const foreground = useSharedValue(AppState.currentState === 'active');
   const blocked = useSharedValue(false);
-  const planned = useSharedValue(0);
   const deliveryError = useSharedValue(false);
+  const resumeAfterDelivery = useSharedValue(false);
   const pendingEvents = useSharedValue(0);
-  // Production initialization allocates no probe sample buffers.
-  const initialProbe = useMemo<Probe | null>(() => (__DEV__ && devProbe ? devProbe.createProbe() : null), []);
   const probe = useSharedValue(initialProbe);
   const probeEnabled = useSharedValue(false);
+  const [deliveryFailure, setDeliveryFailure] = useState<DeliveryFailure | null>(null);
   const handler = useRef(onEvent);
   useEffect(() => {
     handler.current = onEvent;
@@ -74,141 +77,236 @@ export function useFixedEngine<S>(
     (event: DiscreteEvent, session: number, sequence: number) => handler.current(event, session, sequence),
     [],
   );
-  // Factory only stores dispatchEvent; it does not read the ref until RN receives a batch.
+  // Factory stores this callback; it only reads the handler ref when a packet arrives.
   // eslint-disable-next-line react-hooks/refs
   const receiver = useMemo(() => createEventReceiver(dispatchEvent), [dispatchEvent]);
-  const receive = useCallback(
-    (batch: number[]) => {
-      try {
-        const sequence = receiver(batch);
-        scheduleOnUI(() => {
+  const succeeded = useCallback(
+    (sequence: number) => {
+      setDeliveryFailure(null);
+      scheduleOnUI(() => {
+        'worklet';
+        events.modify((bus) => {
           'worklet';
-          events.modify((b) => {
+          acknowledgeBatch(bus, sequence);
+          pendingEvents.set(bus.journal.count);
+          return bus;
+        });
+        const wasFailed = deliveryError.get();
+        deliveryError.set(false);
+        if (wasFailed && resumeAfterDelivery.get() && foreground.get() && !events.get().terminal) {
+          clock.modify((c) => {
             'worklet';
-            acknowledgeBatch(b, sequence);
-            pendingEvents.set(b.journal.count);
-            return b;
+            resumeClock(c);
+            return c;
           });
-        });
-      } catch {
-        // Retain the journal and stop physics; caller repairs handler then explicitly retries.
-        scheduleOnUI(() => {
-          'worklet';
-          deliveryError.set(true);
-          pauseClock(clock.get());
-          running.set(false);
-          alpha.set(0);
-          clearInput(input.get());
-        });
-      }
+          alpha.set(1);
+          running.set(true);
+        }
+        resumeAfterDelivery.set(false);
+      });
     },
-    [alpha, clock, deliveryError, events, input, pendingEvents, receiver, running],
+    [alpha, clock, deliveryError, events, foreground, pendingEvents, resumeAfterDelivery, running],
   );
-  const { step, reset: resetState, maxEventsPerStep } = engine;
+  const failed = useCallback(
+    (error: unknown, failure: DeliveryFailure) => {
+      if (DEV_MODE) console.error('[Game foundation] Event delivery failed', error);
+      setDeliveryFailure(failure);
+      scheduleOnUI(() => {
+        'worklet';
+        if (!deliveryError.get()) resumeAfterDelivery.set(running.get());
+        deliveryError.set(true);
+        clock.modify((c) => {
+          'worklet';
+          pauseClock(c);
+          return c;
+        });
+        input.modify((controls) => {
+          'worklet';
+          clearInput(controls);
+          return controls;
+        });
+        running.set(false);
+        alpha.set(1);
+      });
+    },
+    [alpha, clock, deliveryError, input, resumeAfterDelivery, running],
+  );
+  const controller = useMemo(
+    () => createDeliveryController({ deliver: receiver, success: succeeded, failure: failed }),
+    [failed, receiver, succeeded],
+  );
+  const receive = useCallback((batch: number[]) => controller.receive(batch), [controller]);
   const stepSeconds = config.step,
     maxDelta = config.maxDelta,
     maxSubsteps = config.maxSubsteps;
-  // Capture a tiny stable config, rather than the engine/route object.
   const fixedConfig = useMemo(
     () => ({ step: stepSeconds, maxDelta, maxSubsteps }),
     [stepSeconds, maxDelta, maxSubsteps],
   );
-  const advance = useCallback(
-    (s: S) => {
+  const frameCallback = useCallback(
+    (frame: FrameInfo) => {
       'worklet';
-      const c = clock.get(),
-        bus = events.get(),
-        controls = input.get();
-      for (let i = 0; i < planned.get() && !bus.terminal; i++) {
-        step(s, controls, fixedConfig.step, c.tick, bus);
-        c.tick++;
-        controls.down = 0;
-        controls.up = 0;
-        controls.cancelled = false;
-      }
-      return s;
-    },
-    [clock, events, fixedConfig, input, planned, step],
-  );
-  useFrameCallback((frame) => {
-    'worklet';
-    const c = clock.get(),
-      bus = events.get();
-    if (__DEV__ && probeEnabled.get() && running.get() && !c.fresh) {
-      const p = probe.get();
-      if (p && sampleDevFrame) sampleDevFrame(p, frame.timeSincePreviousFrame ?? 0);
-    }
-    if (running.get() && !deliveryError.get()) {
-      const room = hasEventRoom(bus, maxEventsPerStep * fixedConfig.maxSubsteps);
-      blocked.set(!room);
-      if (room) {
-        const count = planFrame(c, (frame.timeSincePreviousFrame ?? 0) / 1000, fixedConfig);
-        planned.set(count);
-        if (count > 0) state.modify(advance);
-        if (bus.terminal) {
-          pauseClock(c);
-          running.set(false);
-          clearInput(input.get());
+      if (!running.get() && pendingEvents.get() === 0) return;
+      // Every object write is within its own shared value modifier. Only primitives use get/set.
+      clock.modify((c) => {
+        'worklet';
+        if (DEV_MODE && probeEnabled.get() && running.get() && !c.fresh) {
+          probe.modify((p) => {
+            'worklet';
+            if (p && sampleDevFrame) sampleDevFrame(p, frame.timeSincePreviousFrame ?? 0);
+            return p;
+          });
         }
-      } else {
-        c.accumulator = 0;
-        c.alpha = 0;
-        c.fresh = true;
-      }
-      alpha.set(c.alpha);
-    }
-    const batch = takeBatch(bus);
-    pendingEvents.set(bus.journal.count);
-    if (batch) scheduleOnRN(receive, batch);
-  });
+        events.modify((bus) => {
+          'worklet';
+          if (running.get() && !deliveryError.get()) {
+            const room = hasEventRoom(bus, maxEventsPerStep * fixedConfig.maxSubsteps);
+            blocked.set(!room);
+            if (room) {
+              const count = planFrame(c, (frame.timeSincePreviousFrame ?? 0) / 1000, fixedConfig);
+              if (count > 0) {
+                input.modify((controls) => {
+                  'worklet';
+                  state.modify((s) => {
+                    'worklet';
+                    for (let i = 0; i < count && !bus.terminal; i++) {
+                      step(s, controls, fixedConfig.step, c.tick, bus);
+                      c.tick++;
+                      controls.down = 0;
+                      controls.up = 0;
+                      controls.cancelled = false;
+                    }
+                    return s;
+                  });
+                  return controls;
+                });
+              }
+              if (bus.terminal) {
+                pauseClock(c);
+                running.set(false);
+                input.modify((controls) => {
+                  'worklet';
+                  clearInput(controls);
+                  return controls;
+                });
+              }
+            } else {
+              c.accumulator = 0;
+              c.alpha = 1;
+              c.holdLatest = true;
+              c.fresh = true;
+            }
+            alpha.set(c.alpha);
+          }
+          const batch = takeBatch(bus);
+          pendingEvents.set(bus.journal.count);
+          if (batch) scheduleOnRN(receive, batch);
+          return bus;
+        });
+        return c;
+      });
+    },
+    [
+      alpha,
+      blocked,
+      clock,
+      deliveryError,
+      events,
+      fixedConfig,
+      input,
+      maxEventsPerStep,
+      pendingEvents,
+      probe,
+      probeEnabled,
+      receive,
+      running,
+      state,
+      step,
+    ],
+  );
+  useFrameCallback(frameCallback);
   const pause = useCallback(
     () =>
       scheduleOnUI(() => {
         'worklet';
-        pauseClock(clock.get());
+        resumeAfterDelivery.set(false);
+        clock.modify((c) => {
+          'worklet';
+          pauseClock(c);
+          return c;
+        });
+        input.modify((controls) => {
+          'worklet';
+          clearInput(controls);
+          return controls;
+        });
         running.set(false);
-        alpha.set(0);
-        clearInput(input.get());
+        alpha.set(1);
       }),
-    [alpha, clock, input, running],
+    [alpha, clock, input, resumeAfterDelivery, running],
   );
   const resume = useCallback(
     () =>
       scheduleOnUI(() => {
         'worklet';
         if (!foreground.get() || events.get().terminal || deliveryError.get()) return;
-        resumeClock(clock.get());
+        clock.modify((c) => {
+          'worklet';
+          resumeClock(c);
+          return c;
+        });
         running.set(true);
+        alpha.set(1);
       }),
-    [clock, deliveryError, events, foreground, running],
+    [alpha, clock, deliveryError, events, foreground, running],
   );
   const reset = useCallback(
     () =>
       scheduleOnUI(() => {
         'worklet';
-        resetClock(clock.get());
-        running.set(false);
-        alpha.set(0);
-        clearInput(input.get());
+        if (deliveryError.get() || pendingEvents.get() > 0) return;
+        resumeAfterDelivery.set(false);
+        clock.modify((c) => {
+          'worklet';
+          resetClock(c);
+          return c;
+        });
+        input.modify((controls) => {
+          'worklet';
+          clearInput(controls);
+          return controls;
+        });
         state.modify((s) => {
           'worklet';
           resetState(s);
           return s;
         });
-        beginSession(events.get());
+        events.modify((bus) => {
+          'worklet';
+          beginSession(bus);
+          return bus;
+        });
+        running.set(false);
+        alpha.set(0);
+        blocked.set(false);
       }),
-    [alpha, clock, events, input, resetState, running, state],
+    [
+      alpha,
+      blocked,
+      clock,
+      deliveryError,
+      events,
+      input,
+      pendingEvents,
+      resetState,
+      resumeAfterDelivery,
+      running,
+      state,
+    ],
   );
-  const retryEvents = useCallback(
-    () =>
-      scheduleOnUI(() => {
-        'worklet';
-        events.get().retry = true;
-        deliveryError.set(false);
-      }),
-    [deliveryError, events],
-  );
+  const retryEvents = useCallback(() => controller.retry(), [controller]);
   useEffect(() => {
+    controller.activate();
     const sub = AppState.addEventListener('change', (status) => {
       scheduleOnUI(() => {
         'worklet';
@@ -218,15 +316,17 @@ export function useFixedEngine<S>(
     });
     return () => {
       sub.remove();
+      controller.dispose();
       pause();
     };
-  }, [foreground, pause]);
+  }, [controller, foreground, pause]);
   return {
     state,
     alpha,
     running,
     blocked,
     deliveryError,
+    deliveryFailure,
     pendingEvents,
     pause,
     resume,
