@@ -7,7 +7,7 @@ import { IconButton, ScalePressable } from '../components/Buttons';
 import { Icon } from '../components/Icon';
 import { CoinChip, Row, Screen } from '../components/UI';
 import { showRewarded, useAdState } from '../services/ads';
-import { AdsEnabled, CATALOG, FreeCoins, type CoinPack } from '../services/config';
+import { CATALOG, FreeCoins, type CoinPack } from '../services/config';
 import { haptic, playSfx } from '../services/feedback';
 import { purchase, usePurchaseState } from '../services/purchases';
 import { useProgress } from '../state/progress';
@@ -60,31 +60,29 @@ export default function Shop() {
         <CoinChip />
       </Row>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {AdsEnabled && (
-          <ScalePressable
-            onPress={freeCoins}
-            disabled={!rewardedReady || freeLeft <= 0 || watching}
-            accessibilityLabel={`Watch an ad for ${FreeCoins.amount} free coins`}
-            style={[styles.item, styles.free, (!rewardedReady || freeLeft <= 0) && { opacity: 0.5 }]}
-          >
-            <View style={[styles.iconWrap, { backgroundColor: colors.surfaceRaised }]}>
-              <Icon name="film" color={accent} />
-            </View>
-            <View style={{ flex: 1, gap: 2 }}>
-              <AppText variant="bodyStrong">Free coins</AppText>
-              <AppText variant="label">
-                {freeLeft > 0 ? `Watch a short ad · ${freeLeft} left today` : 'Come back tomorrow'}
-              </AppText>
-            </View>
-            {watching ? (
-              <ActivityIndicator color={accent} />
-            ) : (
-              <AppText variant="bodyStrong" color={accent}>
-                +{FreeCoins.amount}
-              </AppText>
-            )}
-          </ScalePressable>
-        )}
+        <ScalePressable
+          onPress={freeCoins}
+          disabled={!rewardedReady || freeLeft <= 0 || watching}
+          accessibilityLabel={`Watch an ad for ${FreeCoins.amount} free coins`}
+          style={[styles.item, styles.free, (!rewardedReady || freeLeft <= 0) && { opacity: 0.5 }]}
+        >
+          <View style={[styles.iconWrap, { backgroundColor: colors.surfaceRaised }]}>
+            <Icon name="film" color={accent} />
+          </View>
+          <View style={{ flex: 1, gap: 2 }}>
+            <AppText variant="bodyStrong">Free coins</AppText>
+            <AppText variant="label">
+              {freeLeft > 0 ? `Watch a short ad · ${freeLeft} left today` : 'Come back tomorrow'}
+            </AppText>
+          </View>
+          {watching ? (
+            <ActivityIndicator color={accent} />
+          ) : (
+            <AppText variant="bodyStrong" color={accent}>
+              +{FreeCoins.amount}
+            </AppText>
+          )}
+        </ScalePressable>
 
         {items.map((pack) => {
           const isBusy = busy === pack.id;
