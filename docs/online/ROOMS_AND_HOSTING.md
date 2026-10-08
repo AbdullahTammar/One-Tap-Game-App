@@ -64,6 +64,8 @@ Everyone sees a toast: "👑 Sara is now the host". No match is ever interrupted
 
 As a _secondary_ feature only, Dot Duel can work with no internet when two phones are next to each other. One phone runs the simulation and the other connects over the local network. Same-phone Duel already covers most cases, so this is Phase 5+ and nothing in the online stack depends on it.
 
+> **Update:** to keep server costs low, private rooms and Dot Duel can now be hosted on the owner's phone, with automatic host migration. Public matches stay on our servers. See [HYBRID_HOSTING.md](HYBRID_HOSTING.md).
+
 ## 3. Private games
 
 ### 3.1 Creating and inviting

@@ -5,6 +5,7 @@ This folder is the design for taking Lumo's Dot games online. Read it in this or
 1. **This overview**: which games go online, the core decisions, and the overall architecture.
 2. [Dot Arena online](ARENA.md): the flagship. Netcode, tick rates, bandwidth, prediction, anti-cheat, and scaling.
 3. [Rooms, hosting and private games](ROOMS_AND_HOSTING.md): room lifecycle, the room-owner ("host") role, private games with invite codes, and how Dot Paint and Dot Duel go online.
+4. [Hybrid hosting](HYBRID_HOSTING.md): how to keep server costs low. Public matches run on our VPS, and friends' private rooms are hosted on a player's phone with automatic host migration.
 
 ## Which games go online
 
