@@ -51,6 +51,8 @@ google-services.json
 GoogleService-Info.plist
 *.keystore
 *.pfx
+.foundation-export/
+.foundation-dev-export/
 
 # CanvasKit wasm for the web preview (copied by `npm run web`)
 public/canvaskit.wasm
