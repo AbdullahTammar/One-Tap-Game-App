@@ -2,6 +2,10 @@
 
 Four circle games, one tap: Gate Runner (the original), Pulse, Orbit Switch, and Dot Lock. Choose a game from the library and build a separate personal best in each. See [the collection guide](docs/CIRCLE_COLLECTION.md) for controls and screenshots.
 
+**New: Move & Play.** Seven gesture games: Orb Arena (agar-style battle with dash, power-ups, and a storm zone), Dot Drift, Charge Shot, Swipe Split, Chain Reaction, Connect Flow, and Tilt Orb. See [the Move & Play guide](docs/MOVE_AND_PLAY.md).
+
+<p><img src="docs/screenshots/game-arena.jpg" width="180" alt="Orb Arena"> <img src="docs/screenshots/game-flow.jpg" width="180" alt="Connect Flow"> <img src="docs/screenshots/game-chain.jpg" width="180" alt="Chain Reaction"> <img src="docs/screenshots/game-tilt.jpg" width="180" alt="Tilt Orb"></p>
+
 Built with **Expo SDK 57 / React Native 0.86** (new architecture) from one TypeScript codebase for **Android and iOS**. It's a 1:1 implementation of the _One-Tap Game App_ design canvas: dark ground, lime accent, Unbounded + Manrope.
 
 ## Circle collection
