@@ -9,6 +9,7 @@ import { createMotion, type AnyMotion, type MotionId } from '../game/motion';
 import { SWIPE_COLORS, visibleColor, type SwipeState } from '../game/motion/swipe';
 import { inGap, TILT, type TiltState } from '../game/motion/tilt';
 import { colors, fonts } from '../theme';
+import { SkinDot } from './SkinDot';
 
 interface Props {
   id: MotionId;
@@ -17,10 +18,12 @@ interface Props {
   state?: AnyMotion;
   orbFill?: string;
   orbStroke?: string;
+  orbEmoji?: string;
 }
 interface Orb {
   orbFill: string;
   orbStroke: string;
+  orbEmoji?: string;
   color: string;
 }
 
@@ -31,9 +34,10 @@ export const MotionArt = memo(function MotionArt({
   state,
   orbFill = colors.white,
   orbStroke = colors.white,
+  orbEmoji,
 }: Props) {
   const s = state ?? createMotion(id, 7);
-  const o = { orbFill, orbStroke, color };
+  const o = { orbFill, orbStroke, orbEmoji, color };
   return (
     <Svg width={size} height={size} viewBox="0 0 320 320">
       <Rect
@@ -65,7 +69,7 @@ export const MotionArt = memo(function MotionArt({
   );
 });
 
-function DriftView({ s, orbFill, orbStroke, color }: { s: DriftState } & Orb) {
+function DriftView({ s, orbFill, orbStroke, orbEmoji, color }: { s: DriftState } & Orb) {
   return (
     <>
       <Circle cx={s.gold.x} cy={s.gold.y} r={DRIFT.gold + 6} fill={color} fillOpacity={0.18} />
@@ -73,12 +77,19 @@ function DriftView({ s, orbFill, orbStroke, color }: { s: DriftState } & Orb) {
       {s.enemies.map((e, i) => (
         <Circle key={i} cx={e.x} cy={e.y} r={DRIFT.enemy} fill={colors.danger} />
       ))}
-      <Circle cx={s.x} cy={s.y} r={DRIFT.player} fill={orbFill} stroke={orbStroke} strokeWidth={2} />
+      <SkinDot
+        cx={s.x}
+        cy={s.y}
+        r={orbEmoji ? DRIFT.player + 3 : DRIFT.player}
+        fill={orbFill}
+        stroke={orbStroke}
+        emoji={orbEmoji}
+      />
     </>
   );
 }
 
-function ChargeView({ s, orbFill, orbStroke, color }: { s: ChargeState } & Orb) {
+function ChargeView({ s, orbFill, orbStroke, orbEmoji, color }: { s: ChargeState } & Orb) {
   const y = CHARGE.groundY;
   const x0 = CHARGE.startX;
   const target = x0 + s.gap;
@@ -106,13 +117,13 @@ function ChargeView({ s, orbFill, orbStroke, color }: { s: ChargeState } & Orb) 
           strokeOpacity={0.8}
         />
       )}
-      <Circle
+      <SkinDot
         cx={bx}
         cy={s.phase === 'over' && s.mode !== 'aim' ? by + 40 : by}
-        r={10 - (s.mode === 'charging' ? p * 2 : 0)}
+        r={(orbEmoji ? 14 : 10) - (s.mode === 'charging' ? p * 2 : 0)}
         fill={over ? colors.danger : orbFill}
-        stroke={orbStroke}
-        strokeWidth={2}
+        stroke={over ? colors.danger : orbStroke}
+        emoji={orbEmoji}
       />
       <SvgText fontFamily={fonts.bodyBold} x={160} y={60} fill={colors.textMuted} fontSize={16} textAnchor="middle">
         {s.mode === 'charging' ? `${Math.round(p * 100)}%` : ''}
@@ -228,7 +239,7 @@ function FlowView({ s }: { s: FlowState } & Orb) {
   );
 }
 
-function TiltView({ s, orbFill, orbStroke, color }: { s: TiltState } & Orb) {
+function TiltView({ s, orbFill, orbStroke, orbEmoji, color }: { s: TiltState } & Orb) {
   return (
     <>
       <Circle
@@ -260,12 +271,19 @@ function TiltView({ s, orbFill, orbStroke, color }: { s: TiltState } & Orb) {
           />
         );
       })}
-      <Circle cx={s.x} cy={s.y} r={TILT.ball} fill={orbFill} stroke={orbStroke} strokeWidth={2} />
+      <SkinDot
+        cx={s.x}
+        cy={s.y}
+        r={orbEmoji ? TILT.ball + 3 : TILT.ball}
+        fill={orbFill}
+        stroke={orbStroke}
+        emoji={orbEmoji}
+      />
     </>
   );
 }
 
-function ArenaView({ s, orbFill, orbStroke }: { s: ArenaState } & Orb) {
+function ArenaView({ s, orbFill, orbStroke, orbEmoji }: { s: ArenaState } & Orb) {
   const me = s.orbs[0];
   const r = radiusOf(me.mass);
   // Zoom out as you grow so big orbs still see danger coming.
@@ -347,23 +365,22 @@ function ArenaView({ s, orbFill, orbStroke }: { s: ArenaState } & Orb) {
                   fill="none"
                 />
               )}
-              <Circle
+              <SkinDot
                 cx={tx(o.x)}
                 cy={ty(o.y)}
                 r={rr * k}
                 fill={mine ? orbFill : o.color}
-                fillOpacity={mine ? 1 : 0.9}
-                stroke={mine ? orbStroke : colors.white}
-                strokeOpacity={mine ? 1 : 0.25}
+                stroke={mine ? orbStroke : o.dashT > 0 ? colors.white : o.color}
+                emoji={mine ? orbEmoji : o.emoji}
                 strokeWidth={o.dashT > 0 ? 4 : 2}
               />
               {rr * k > 9 && (
                 <SvgText
                   fontFamily={fonts.bodyBold}
                   x={tx(o.x)}
-                  y={ty(o.y) + 4}
-                  fontSize={Math.min(14, rr * k * 0.55)}
-                  fill={mine ? colors.ground : colors.white}
+                  y={(mine ? orbEmoji : o.emoji) ? ty(o.y) + rr * k + 13 : ty(o.y) + 4}
+                  fontSize={Math.min(14, Math.max(10, rr * k * 0.55))}
+                  fill={mine && !orbEmoji ? colors.ground : colors.white}
                   textAnchor="middle"
                 >
                   {o.name}

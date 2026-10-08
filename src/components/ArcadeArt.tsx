@@ -1,6 +1,7 @@
 import Svg, { Circle } from 'react-native-svg';
 import { type ArcadeId, type ArcadeState, createArcade } from '../game/arcade';
 import { colors } from '../theme';
+import { SkinDot } from './SkinDot';
 
 export function ArcadeArt({
   id,
@@ -9,6 +10,7 @@ export function ArcadeArt({
   state = createArcade(),
   orbFill = colors.white,
   orbStroke = colors.white,
+  orbEmoji,
 }: {
   id: ArcadeId;
   color: string;
@@ -16,6 +18,7 @@ export function ArcadeArt({
   state?: ArcadeState;
   orbFill?: string;
   orbStroke?: string;
+  orbEmoji?: string;
 }) {
   const point = (r: number, a: number) => ({ cx: 160 + r * Math.cos(a), cy: 160 + r * Math.sin(a) });
   return (
@@ -25,7 +28,7 @@ export function ArcadeArt({
           <Circle cx={160} cy={160} r={76} stroke={color} strokeOpacity={0.12} strokeWidth={24} fill="none" />
           <Circle cx={160} cy={160} r={76} stroke={color} strokeWidth={3} strokeDasharray="3 9" fill="none" />
           <Circle cx={160} cy={160} r={Math.max(1, state.radius)} stroke={color} strokeWidth={8} fill="none" />
-          <Circle cx={160} cy={160} r={7} fill={orbFill} stroke={orbStroke} strokeWidth={2} />
+          <SkinDot cx={160} cy={160} r={orbEmoji ? 16 : 7} fill={orbFill} stroke={orbStroke} emoji={orbEmoji} />
         </>
       ) : id === 'switch' ? (
         <>
@@ -37,19 +40,25 @@ export function ArcadeArt({
             r={11}
             fill={color}
           />
-          <Circle
+          <SkinDot
             {...point(state.lane === 0 ? 80 : 120, -Math.PI / 2)}
-            r={10}
+            r={orbEmoji ? 14 : 10}
             fill={orbFill}
             stroke={orbStroke}
-            strokeWidth={2}
+            emoji={orbEmoji}
           />
         </>
       ) : (
         <>
           <Circle cx={160} cy={160} r={110} stroke={colors.outline} strokeWidth={4} fill="none" />
           <Circle {...point(110, state.target)} r={22} stroke={color} strokeWidth={4} fill="none" />
-          <Circle {...point(110, state.angle)} r={10} fill={orbFill} stroke={orbStroke} strokeWidth={2} />
+          <SkinDot
+            {...point(110, state.angle)}
+            r={orbEmoji ? 14 : 10}
+            fill={orbFill}
+            stroke={orbStroke}
+            emoji={orbEmoji}
+          />
         </>
       )}
     </Svg>

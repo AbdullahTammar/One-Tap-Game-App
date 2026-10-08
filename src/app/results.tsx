@@ -110,7 +110,7 @@ export default function Results() {
         {unlock && (
           <Animated.View entering={FadeInDown.delay(220)}>
             <Card style={styles.inline}>
-              <OrbBadge fill={unlock.fill} stroke={unlock.stroke} size={44} />
+              <OrbBadge fill={unlock.fill} stroke={unlock.stroke} emoji={unlock.emoji} size={44} />
               <View style={{ flex: 1, gap: 8 }}>
                 <Row style={{ justifyContent: 'space-between' }}>
                   <AppText variant="bodyStrong" style={{ fontSize: 14 }}>
