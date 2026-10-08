@@ -45,6 +45,9 @@ export function createDuel(seed: number): DuelState {
 }
 function botTarget(s: DuelState) {
   const p = s.puck;
+  const me = s.paddles[1];
+  // Puck behind the bot (against its wall): step aside so it can never be pinned in a corner.
+  if (p.y < me.y + 4) return { x: p.x + (p.x < 160 ? 50 : -50), y: Math.min(140, p.y + 50) };
   if (p.y < 175 && (p.vy < 40 || p.y < 90)) return { x: p.x, y: Math.max(p.y - DUEL.paddle, 25) };
   return { x: 160 + (p.x - 160) * 0.6, y: 45 };
 }

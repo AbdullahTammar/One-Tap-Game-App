@@ -301,3 +301,10 @@ describe('paint', () => {
     expect(end.rank).toBeGreaterThanOrEqual(1);
   });
 });
+
+test('duel bot never pins the puck against its own wall', () => {
+  let s: DuelState = { ...run(createDuel(5)), serve: 0, puck: { x: 15, y: 15, vx: 0, vy: 0 } };
+  s = { ...s, paddles: [s.paddles[0], { x: 40, y: 40, vx: 0, vy: 0 }] };
+  for (let i = 0; i < 120; i++) s = stepDuel(s, 1 / 60);
+  expect(Math.hypot(s.puck.x - s.paddles[1].x, s.puck.y - s.paddles[1].y)).toBeGreaterThan(40);
+});

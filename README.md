@@ -1,10 +1,10 @@
 # Lumo: The Circle Collection
 
-Four circle games, one tap: Gate Runner (the original), Pulse, Orbit Switch, and Dot Lock. Choose a game from the library and build a separate personal best in each. See [the collection guide](docs/CIRCLE_COLLECTION.md) for controls and screenshots.
+Four circle games, one tap: Dot Runner (the original), Dot Pulse, Dot Switch, and Dot Lock. Choose a game from the library and build a separate personal best in each. See [the collection guide](docs/CIRCLE_COLLECTION.md) for controls and screenshots.
 
-**New: Move & Play.** Seven gesture games: Orb Arena (agar-style battle with dash, power-ups, and a storm zone), Dot Drift, Charge Shot, Swipe Split, Chain Reaction, Connect Flow, and Tilt Orb. See [the Move & Play guide](docs/MOVE_AND_PLAY.md).
+**Move & Play: 10 more Dot games.** Dot Arena (agar-style battle), Dot Paint (territory battle), Dot Duel (2 players on one phone), Dot Drift, Dot Jump, Dot Sort, Dot Chain, Dot Link, Dot Maze and Dot Stack. Also included: 94 skins (characters, monsters and country flags), 26 achievements, and a dot name for battle leaderboards. See [the Move & Play guide](docs/MOVE_AND_PLAY.md).
 
-<p><img src="docs/screenshots/game-arena.jpg" width="180" alt="Orb Arena"> <img src="docs/screenshots/game-flow.jpg" width="180" alt="Connect Flow"> <img src="docs/screenshots/game-chain.jpg" width="180" alt="Chain Reaction"> <img src="docs/screenshots/game-tilt.jpg" width="180" alt="Tilt Orb"></p>
+<p><img src="docs/screenshots/game-arena.jpg" width="180" alt="Dot Arena"> <img src="docs/screenshots/game-paint.jpg" width="180" alt="Dot Paint"> <img src="docs/screenshots/game-duel.jpg" width="180" alt="Dot Duel"> <img src="docs/screenshots/skins-flags.jpg" width="180" alt="Flag skins"> <img src="docs/screenshots/achievements.jpg" width="180" alt="Achievements"></p>
 
 Built with **Expo SDK 57 / React Native 0.86** (new architecture) from one TypeScript codebase for **Android and iOS**. It's a 1:1 implementation of the _One-Tap Game App_ design canvas: dark ground, lime accent, Unbounded + Manrope.
 
