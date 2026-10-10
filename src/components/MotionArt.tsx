@@ -9,7 +9,7 @@ import { CHARGE, chargePower, type ChargeState } from '../game/motion/charge';
 import { DRIFT, type DriftState } from '../game/motion/drift';
 import { PAINT, PAINT_COLORS, paintBoard, type PaintState } from '../game/motion/paint';
 import { ceiling, STACK, type StackState } from '../game/motion/stack';
-import { cellCenter, FLOW_COLORS, type FlowState } from '../game/motion/flow';
+import { cellCenter, FLOW_COLORS, FLOW_CLEAR_TIME, type FlowState } from '../game/motion/flow';
 import { createMotion, type AnyMotion, type MotionId } from '../game/motion';
 import { SWIPE_COLORS, visibleColor, type SwipeState } from '../game/motion/swipe';
 import { colors, fonts } from '../theme';
@@ -215,7 +215,7 @@ function FlowView({ s, fieldHeight }: { s: FlowState; fieldHeight: number } & Or
   const pts = s.path.map(center);
   const pathColor = s.path.length ? FLOW_COLORS[s.grid[s.path[0]]] : colors.white;
   const W = 300 * (s.timeLeft / 45);
-  const burstProgress = 1 - s.burstLeft / 0.4;
+  const burstProgress = 1 - s.burstLeft / FLOW_CLEAR_TIME;
   return (
     <>
       <Rect x={10} y={4} width={300} height={4} rx={2} fill={colors.outline} />
@@ -224,8 +224,8 @@ function FlowView({ s, fieldHeight }: { s: FlowState; fieldHeight: number } & Or
         <Polyline
           points={pts.map((p) => `${p.x},${p.y}`).join(' ')}
           stroke={pathColor}
-          strokeOpacity={0.18}
-          strokeWidth={20}
+          strokeOpacity={0.08}
+          strokeWidth={12}
           fill="none"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -235,7 +235,7 @@ function FlowView({ s, fieldHeight }: { s: FlowState; fieldHeight: number } & Or
         <Polyline
           points={pts.map((p) => `${p.x},${p.y}`).join(' ')}
           stroke={pathColor}
-          strokeWidth={8}
+          strokeWidth={5}
           fill="none"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -244,20 +244,23 @@ function FlowView({ s, fieldHeight }: { s: FlowState; fieldHeight: number } & Or
       {s.grid.map((c, i) => {
         const p = center(i);
         const on = s.path.includes(i) || (s.loop && c === s.grid[s.path[0]]);
-        const pop = s.burst.includes(i) ? 1 + Math.sin(burstProgress * Math.PI) * 0.25 : 1;
+        const pop = s.burst.includes(i) ? 0.88 + 0.12 * (1 - Math.pow(1 - burstProgress, 3)) : 1;
         return (
           <G key={i}>
+            <Circle cx={p.x} cy={p.y + 2} r={15 * pop} fill={colors.ground} fillOpacity={0.55} />
             {on && (
               <Circle
                 cx={p.x}
                 cy={p.y}
-                r={23 + Math.sin(s.timeLeft * 8) * 2}
-                fill={FLOW_COLORS[c]}
-                fillOpacity={0.15}
+                r={20}
+                fill="none"
+                stroke={FLOW_COLORS[c]}
+                strokeWidth={1.5}
+                strokeOpacity={0.65}
               />
             )}
-            <Circle cx={p.x} cy={p.y} r={(on ? 17 : 14) * pop} fill={FLOW_COLORS[c]} />
-            <Circle cx={p.x - 4} cy={p.y - 4} r={3} fill={colors.white} fillOpacity={0.3} />
+            <Circle cx={p.x} cy={p.y} r={(on ? 16 : 15) * pop} fill={FLOW_COLORS[c]} />
+            {on && <Circle cx={p.x} cy={p.y} r={4} fill={colors.ground} fillOpacity={0.75} />}
           </G>
         );
       })}
@@ -265,24 +268,8 @@ function FlowView({ s, fieldHeight }: { s: FlowState; fieldHeight: number } & Or
         s.burst.map((i) => {
           const p = center(i);
           return (
-            <G key={`burst${i}`} opacity={1 - burstProgress}>
-              <Circle
-                cx={p.x}
-                cy={p.y}
-                r={18 + burstProgress * 24}
-                stroke={FLOW_COLORS[s.burstColor]}
-                strokeWidth={3 * (1 - burstProgress)}
-                fill="none"
-              />
-              {[0, 1, 2, 3].map((j) => (
-                <Circle
-                  key={j}
-                  cx={p.x + Math.cos((j * Math.PI) / 2 + Math.PI / 4) * burstProgress * 32}
-                  cy={p.y + Math.sin((j * Math.PI) / 2 + Math.PI / 4) * burstProgress * 32}
-                  r={3 * (1 - burstProgress)}
-                  fill={FLOW_COLORS[s.burstColor]}
-                />
-              ))}
+            <G key={`burst${i}`} opacity={Math.pow(1 - burstProgress, 2) * 0.65}>
+              <Circle cx={p.x} cy={p.y} r={16 * (1 - burstProgress * 0.25)} fill={colors.white} />
             </G>
           );
         })}

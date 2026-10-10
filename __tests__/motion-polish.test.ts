@@ -1,5 +1,5 @@
 import { motionPoint, paintCamera } from '../src/game/motion/viewport';
-import { cellCenter, createFlow, inputFlow, stepFlow } from '../src/game/motion/flow';
+import { cellCenter, createFlow, inputFlow, stepFlow, FLOW_CLEAR_TIME } from '../src/game/motion/flow';
 
 test('Link touch coordinates match full-height dots on portrait and landscape stages', () => {
   for (const [width, height] of [
@@ -36,10 +36,11 @@ test('Link clear creates bounded animation, expires it, and freezes it while pau
   s = inputFlow(s, { type: 'up', ...cellCenter(1) });
   expect(s.score).toBe(2);
   expect(s.burst).toEqual([0, 1]);
-  expect(s.burstLeft).toBe(0.4);
+  expect(s.burstLeft).toBe(FLOW_CLEAR_TIME);
+  expect(s.burstLeft).toBeLessThanOrEqual(0.15);
   const paused = { ...s, phase: 'paused' as const };
   expect(stepFlow(paused, 0.05)).toBe(paused);
-  for (let i = 0; i < 10; i++) s = stepFlow(s, 0.05);
+  for (let i = 0; i < 3; i++) s = stepFlow(s, 0.05);
   expect(s.burstLeft).toBe(0);
   expect(s.burst).toEqual([]);
 });

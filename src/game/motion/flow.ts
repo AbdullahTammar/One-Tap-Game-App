@@ -2,6 +2,7 @@ import { base, rand, validDt, type MotionBase, type MotionInput } from './common
 
 export const FLOW = { size: 6, colors: 4, time: 45, cell: 320 / 6, hit: 21 };
 export const FLOW_COLORS = ['#FF5E7E', '#5AC8FA', '#C8F560', '#B48CFF'] as const;
+export const FLOW_CLEAR_TIME = 0.14;
 export interface FlowState extends MotionBase {
   grid: number[];
   path: number[];
@@ -69,7 +70,7 @@ export function inputFlow(state: FlowState, ev: MotionInput): FlowState {
     const clear = new Set(state.loop ? state.grid.flatMap((c, i) => (c === color ? [i] : [])) : state.path);
     s.burst = Array.from(clear);
     s.burstColor = color;
-    s.burstLeft = 0.4;
+    s.burstLeft = FLOW_CLEAR_TIME;
     s.score += clear.size;
     // Long chains buy time: the clock is the real opponent.
     const bonus = state.loop ? 3 : state.path.length >= 4 ? 1 : 0;

@@ -8,9 +8,10 @@ stays below the leaderboard. The control hint explains the player marker.
 
 Link keeps its 6-by-6 board and stretches the row spacing to the stage height.
 Touch coordinates map independently along each axis, so displayed dots and hit
-targets agree in portrait and landscape. Dots are larger, selected links glow,
-selected dots pulse, and cleared cells emit a 0.4-second ring/particle burst with
-a refill pop. Effects reuse the game's existing simulation clock, freeze when
+targets agree in portrait and landscape. Dots are flat color discs with a subtle
+depth shadow, a thin selection outline and a dark center when selected. Connections
+use a narrow line with a quiet outer edge. Clears use a 140ms shrinking flash and
+quick refill snap, with no particles or continuous pulsing. Effects reuse the game's existing simulation clock, freeze when
 paused, expire automatically, and store at most 36 cell indices. No dependency
 or additional animation loop was added. This is visual polish, not a worklet
 migration of Paint or Link; their existing React simulation remains.
