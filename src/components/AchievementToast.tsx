@@ -1,3 +1,4 @@
+import { PLAYER_ACHIEVEMENTS } from '../game/achievementAvailability';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInUp, FadeOutUp } from 'react-native-reanimated';
@@ -15,12 +16,16 @@ export function AchievementToast() {
   const insets = useSafeAreaInsets();
   useEffect(() => {
     if (!toast) return;
+    if (!PLAYER_ACHIEVEMENTS.some((a) => a.id === toast.id)) {
+      useAchievements.getState().dismissToast();
+      return;
+    }
     playSfx('unlock');
     haptic('success');
     const t = setTimeout(() => useAchievements.getState().dismissToast(), 3200);
     return () => clearTimeout(t);
   }, [toast]);
-  if (!toast) return null;
+  if (!toast || !PLAYER_ACHIEVEMENTS.some((a) => a.id === toast.id)) return null;
   return (
     <View style={[styles.wrap, { top: insets.top + 8 }]}>
       <Animated.View

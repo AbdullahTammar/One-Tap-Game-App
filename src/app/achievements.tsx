@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { AppText } from '../components/AppText';
 import { IconButton } from '../components/Buttons';
 import { ProgressBar, Row, Screen } from '../components/UI';
-import { ACHIEVEMENTS } from '../game/achievements';
+import { PLAYER_ACHIEVEMENTS as ACHIEVEMENTS, playerStats } from '../game/achievementAvailability';
 import { currentStats, useAchievements } from '../state/achievements';
 import { useArcadeProgress } from '../state/arcade';
 import { useProgress } from '../state/progress';
@@ -19,7 +19,7 @@ export default function Achievements() {
   useArcadeProgress((s) => s.best);
   useProgress((s) => s.best + s.owned.length);
   const name = displayName(useSettings((s) => s.playerName));
-  const stats = currentStats(counters);
+  const stats = playerStats(currentStats(counters));
   const done = ACHIEVEMENTS.filter((a) => unlocked[a.id]).length;
   const earned = ACHIEVEMENTS.filter((a) => unlocked[a.id]).reduce((n, a) => n + a.reward, 0);
   const sorted = [...ACHIEVEMENTS].sort(

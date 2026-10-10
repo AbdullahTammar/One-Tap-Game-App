@@ -1,18 +1,15 @@
 # Move & Play
 
-Ten "Dot" games that go beyond a single tap, alongside the four one-tap circle games (14 games in total). Each Move & Play game uses a different gesture, keeps its own personal best, pays coins at game over, and uses the equipped dot skin, sound, and haptic settings.
+Seven enabled "Dot" games that go beyond a single tap, alongside the four one-tap circle games (11 games in total). Each Move & Play game uses a different gesture, keeps its own personal best, pays coins at game over, and uses the equipped dot skin, sound, and haptic settings.
 
 | Game      | Gesture                  | How it plays                                                                                                                            | Score                    |
 | --------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
 | Dot Arena | Floating joystick + Dash | Agar-style survival. Eat pellets and smaller dots, avoid bigger ones, and stay inside the shrinking storm zone for a 3-minute match.    | Peak mass + finish bonus |
 | Dot Paint | Swipe to steer           | Territory battle. Leave your land to draw a trail and come home to claim everything it encloses. Cut a rival's trail to knock them out. | % of the map             |
-| Dot Duel  | Multi-touch drag         | Air hockey. Two players share one phone, one on each half, or you play the bot. First to 5 goals wins.                                  | Goals                    |
 | Dot Drift | Drag                     | Slide through a growing swarm. Chain gold dots within 3 s to build a combo of up to x8.                                                 | Points                   |
 | Dot Jump  | Hold & release           | Charge, then release to land on the next pad. A perfect landing scores double. Holding too long burns out the jump.                     | Pads                     |
 | Dot Sort  | Swipe                    | Fling each dot to the gate of its color. Gates shuffle every 8 sorts, and trick dots change color halfway.                              | Sorts                    |
-| Dot Chain | One tap per level        | Place one spark. Every dot it touches explodes and keeps the chain going. Pop the goal to reach the next level.                         | Popped                   |
 | Dot Link  | Draw                     | Link same-color neighbours against a 45 s clock. Close a loop to clear that whole color. Long chains add time.                          | Dots                     |
-| Dot Maze  | Tilt (drag on web)       | Roll out through gaps in three counter-rotating rings before the timer ends.                                                            | Escapes                  |
 | Dot Stack | Hold                     | Grow a ring and lock it just inside the last ring. The closer you dare, the more it scores: +3 for a perfect fit.                       | Points                   |
 
 The one-tap games follow the same naming: Dot Runner (the original), Dot Pulse, Dot Switch, and Dot Lock.
@@ -49,11 +46,10 @@ The character or flag shows on your dot in every game drawn with SVG. Dot Runner
 
 ## Achievements
 
-There are 26 achievements with coin rewards:
+There are 22 visible achievements with coin rewards:
 
 - **Milestones:** plays, distinct games, and play on 7 different days.
 - **Battle:** kills, mass, an arena win, territory claimed, and trails cut.
-- **Duels:** win a duel, and play 2-player matches together.
 - **Score goals:** one for every game.
 - **Other:** skins owned, and sharing a score.
 
@@ -63,11 +59,11 @@ Unlocks show a banner from any screen. The Achievements screen opens from Home, 
 
 These were captured from the Expo web preview at a 390 × 844 phone viewport.
 
-<p><img src="screenshots/motion-library.jpg" width="200" alt="Move & Play library"> <img src="screenshots/game-arena.jpg" width="200" alt="Dot Arena"> <img src="screenshots/dot-name.jpg" width="200" alt="Naming your dot"> <img src="screenshots/game-paint.jpg" width="200" alt="Dot Paint"></p>
-<p><img src="screenshots/game-duel-modes.jpg" width="200" alt="Dot Duel mode picker"> <img src="screenshots/game-duel.jpg" width="200" alt="Dot Duel"> <img src="screenshots/game-stack.jpg" width="200" alt="Dot Stack"> <img src="screenshots/game-drift.jpg" width="200" alt="Dot Drift"></p>
-<p><img src="screenshots/game-charge.jpg" width="200" alt="Dot Jump"> <img src="screenshots/game-swipe.jpg" width="200" alt="Dot Sort"> <img src="screenshots/game-chain.jpg" width="200" alt="Dot Chain"> <img src="screenshots/game-flow.jpg" width="200" alt="Dot Link"></p>
-<p><img src="screenshots/game-tilt.jpg" width="200" alt="Dot Maze"> <img src="screenshots/skins-characters.jpg" width="200" alt="Character skins and mystery box"> <img src="screenshots/skins-flags.jpg" width="200" alt="Flag skins"> <img src="screenshots/achievements.jpg" width="200" alt="Achievements"></p>
-<p><img src="screenshots/achievement-unlocked.jpg" width="200" alt="Achievement unlocked banner"> <img src="screenshots/home-achievements.jpg" width="200" alt="Home with achievements"></p>
+<p> <img src="screenshots/game-arena.jpg" width="200" alt="Dot Arena"> <img src="screenshots/dot-name.jpg" width="200" alt="Naming your dot"> <img src="screenshots/game-paint.jpg" width="200" alt="Dot Paint"></p>
+<p>  <img src="screenshots/game-stack.jpg" width="200" alt="Dot Stack"> <img src="screenshots/game-drift.jpg" width="200" alt="Dot Drift"></p>
+<p><img src="screenshots/game-charge.jpg" width="200" alt="Dot Jump"> <img src="screenshots/game-swipe.jpg" width="200" alt="Dot Sort">  <img src="screenshots/game-flow.jpg" width="200" alt="Dot Link"></p>
+<p> <img src="screenshots/skins-characters.jpg" width="200" alt="Character skins and mystery box"> <img src="screenshots/skins-flags.jpg" width="200" alt="Flag skins"> </p>
+<p><img src="screenshots/achievement-unlocked.jpg" width="200" alt="Achievement unlocked banner"> </p>
 
 ## Implementation
 
@@ -79,12 +75,11 @@ These were captured from the Expo web preview at a 390 × 844 phone viewport.
 
 ## Road to online play
 
-Dot Arena, Dot Paint, and Dot Duel are built to go online without rewriting their rules:
+Dot Arena and Dot Paint are built to go online without rewriting their rules:
 
 1. Every player, human or bot, is driven by the same small input:
    - Arena: a heading plus dash.
    - Paint: a direction.
-   - Duel: a paddle target.
 
    A remote player is just another source of that input.
 
@@ -92,6 +87,7 @@ Dot Arena, Dot Paint, and Dot Duel are built to go online without rewriting thei
 3. Bots fill empty seats so matches start instantly. Player names and skins are already part of each player's state.
 4. Next steps:
    - Friend rooms with a share code.
-   - Online Dot Duel for couples on two phones.
    - A weekly leaderboard.
    - Ghost replays for the deterministic games.
+
+Maze, Duel and Chain are disabled by default. See [deferred game ideas](DEFERRED_GAMES.md) for their design and unlock conditions. Their existing sources, tests and saved keys are retained.

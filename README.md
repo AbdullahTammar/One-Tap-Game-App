@@ -2,9 +2,9 @@
 
 Four circle games, one tap: Dot Runner (the original), Dot Pulse, Dot Switch, and Dot Lock. Choose a game from the library and build a separate personal best in each. See [the collection guide](docs/CIRCLE_COLLECTION.md) for controls and screenshots.
 
-**Move & Play: 10 more Dot games.** Dot Arena (agar-style battle), Dot Paint (territory battle), Dot Duel (2 players on one phone), Dot Drift, Dot Jump, Dot Sort, Dot Chain, Dot Link, Dot Maze and Dot Stack. Also included: 94 skins (characters, monsters and country flags), 26 achievements, and a dot name for battle leaderboards. See [the Move & Play guide](docs/MOVE_AND_PLAY.md) and the [online multiplayer design](docs/online/README.md).
+**Move & Play: seven games.** Dot Arena, Dot Paint, Dot Drift, Dot Jump, Dot Sort, Dot Link and Dot Stack bring the default collection to 11 games, with 94 skins and 22 visible achievements. Maze, Duel and Chain are preserved as [deferred ideas](docs/DEFERRED_GAMES.md), disabled by default.
 
-<p><img src="docs/screenshots/game-arena.jpg" width="180" alt="Dot Arena"> <img src="docs/screenshots/game-paint.jpg" width="180" alt="Dot Paint"> <img src="docs/screenshots/game-duel.jpg" width="180" alt="Dot Duel"> <img src="docs/screenshots/skins-flags.jpg" width="180" alt="Flag skins"> <img src="docs/screenshots/achievements.jpg" width="180" alt="Achievements"></p>
+<p><img src="docs/screenshots/game-arena.jpg" width="180" alt="Dot Arena"> <img src="docs/screenshots/game-paint.jpg" width="180" alt="Dot Paint">  <img src="docs/screenshots/skins-flags.jpg" width="180" alt="Flag skins"> </p>
 
 Built with **Expo SDK 57 / React Native 0.86** (new architecture) from one TypeScript codebase for **Android and iOS**. It's a 1:1 implementation of the _One-Tap Game App_ design canvas: dark ground, lime accent, Unbounded + Manrope.
 
@@ -18,10 +18,10 @@ Built with **Expo SDK 57 / React Native 0.86** (new architecture) from one TypeS
 
 ## Features
 
-- **Gate Runner: 60/120 fps gameplay on the UI thread.** The physics step (sub-stepped, so the orb can't skip past a gate) and tap resolution run as Reanimated worklets. Rendering is GPU-accelerated with Skia. React doesn't re-render during play.
+- **Gate Runner: 60/120 fps gameplay on the UI thread.** The physics step (sub-stepped, so the orb can't skip past a gate) and tap resolution run as Reanimated worklets. Rendering is GPU-accelerated with Skia. Zero frame-driven React renders; discrete events may update React.
 - **Gate Runner taps register on touch-down** for near-zero input latency, with haptics and synthesized original SFX.
 - **Circle arcade:** Three additional SVG games with frame-based timing, persistent personal bests, pause/resume, instant retries, and equipped orb skins. Gate Runner retains its existing coins, ranks, and daily goals.
-- **Screens:** Game library (four games, bests, Gate Runner streak and daily goal), Gameplay (pause, levels, speed, Missed! sheet), Results (stats, next unlock, continue / double coins), Skins shop (12 orbs, coin unlocks), Ranks (7-tier ladder, personal top 10, lifetime stats), Settings (sound, haptics, accent theme, store, privacy), Coin Shop.
+- **Screens:** Game library (11 enabled games, bests, Gate Runner streak and daily goal), Gameplay (pause, levels, speed, Missed! sheet), Results (stats, next unlock, continue / double coins), Skins shop (12 orbs, coin unlocks), Ranks (7-tier ladder, personal top 10, lifetime stats), Settings (sound, haptics, accent theme, store, privacy), Coin Shop.
 - **Monetization:** AdMob rewarded and interstitial ads with consent (UMP) and ATT, plus RevenueCat IAP (Remove Ads, Starter Pack, coin packs). See [`docs/MONETIZATION.md`](docs/MONETIZATION.md).
 - **Production details:** MMKV persistence, crash-safe error boundary, idempotent purchase grants, app pauses when backgrounded, Android back handling, accessibility labels, privacy manifest, no unused permissions, release minification.
 

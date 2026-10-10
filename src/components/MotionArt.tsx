@@ -1,19 +1,26 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- build-time conditional requires exclude deferred modules */
+import type { ChainState } from '../game/motion/chain';
+import type { DuelState } from '../game/motion/duel';
+import type { TiltState } from '../game/motion/tilt';
 import { memo } from 'react';
 import Svg, { Circle, G, Line, Path, Polyline, Rect, Text as SvgText } from 'react-native-svg';
 import { ARENA, leaderboard, PELLET_COLORS, radiusOf, type ArenaState } from '../game/motion/arena';
-import { blastRadius, CHAIN, CHAIN_COLORS, type ChainState } from '../game/motion/chain';
 import { CHARGE, chargePower, type ChargeState } from '../game/motion/charge';
 import { DRIFT, type DriftState } from '../game/motion/drift';
-import { DUEL, type DuelState } from '../game/motion/duel';
 import { PAINT, PAINT_COLORS, paintBoard, type PaintState } from '../game/motion/paint';
 import { ceiling, STACK, type StackState } from '../game/motion/stack';
 import { cellCenter, FLOW_COLORS, type FlowState } from '../game/motion/flow';
 import { createMotion, type AnyMotion, type MotionId } from '../game/motion';
 import { SWIPE_COLORS, visibleColor, type SwipeState } from '../game/motion/swipe';
-import { inGap, TILT, type TiltState } from '../game/motion/tilt';
 import { colors, fonts } from '../theme';
 import { SkinDot } from './SkinDot';
 
+const DeferredView =
+  process.env.EXPO_PUBLIC_ENABLE_DEFERRED_GAMES === '1' ||
+  (__DEV__ && process.env.EXPO_PUBLIC_DEV_DEFERRED_GAMES === '1') ||
+  process.env.NODE_ENV === 'test'
+    ? (require('./DeferredMotionArt').default as typeof import('./DeferredMotionArt').default)
+    : () => null;
 interface Props {
   id: MotionId;
   color: string;
@@ -65,17 +72,17 @@ export const MotionArt = memo(function MotionArt({
       ) : id === 'swipe' ? (
         <SwipeView s={s as SwipeState} {...o} />
       ) : id === 'chain' ? (
-        <ChainView s={s as ChainState} {...o} />
+        <DeferredView id="chain" s={s as ChainState} {...o} />
       ) : id === 'flow' ? (
         <FlowView s={s as FlowState} {...o} />
       ) : id === 'stack' ? (
         <StackView s={s as StackState} {...o} />
       ) : id === 'duel' ? (
-        <DuelView s={s as DuelState} {...o} />
+        <DeferredView id="duel" s={s as DuelState} {...o} />
       ) : id === 'paint' ? (
         <PaintView s={s as PaintState} {...o} />
       ) : (
-        <TiltView s={s as TiltState} {...o} />
+        <DeferredView id="tilt" s={s as TiltState} {...o} />
       )}
     </Svg>
   );
@@ -195,35 +202,6 @@ function SwipeView({ s, orbStroke }: { s: SwipeState } & Orb) {
   );
 }
 
-function ChainView({ s, color }: { s: ChainState } & Orb) {
-  return (
-    <>
-      {s.dots.map((d, i) =>
-        d.blast >= 0 ? (
-          <Circle
-            key={i}
-            cx={d.x}
-            cy={d.y}
-            r={blastRadius(d.blast)}
-            fill={d.color < 0 ? color : CHAIN_COLORS[d.color]}
-            fillOpacity={0.35}
-            stroke={d.color < 0 ? colors.white : CHAIN_COLORS[d.color]}
-            strokeWidth={1.5}
-          />
-        ) : (
-          <Circle key={i} cx={d.x} cy={d.y} r={CHAIN.dot} fill={CHAIN_COLORS[d.color]} />
-        ),
-      )}
-      <SvgText fontFamily={fonts.bodyBold} x={300} y={30} fill={colors.textMuted} fontSize={15} textAnchor="end">
-        {`${s.popped}/${s.goal}`}
-      </SvgText>
-      <SvgText fontFamily={fonts.bodyBold} x={20} y={30} fill={colors.textMuted} fontSize={15}>
-        {`LV ${s.level}`}
-      </SvgText>
-    </>
-  );
-}
-
 function FlowView({ s }: { s: FlowState } & Orb) {
   const pts = s.path.map((i) => cellCenter(i));
   const pathColor = s.path.length ? FLOW_COLORS[s.grid[s.path[0]]] : colors.white;
@@ -247,50 +225,6 @@ function FlowView({ s }: { s: FlowState } & Orb) {
         const on = s.path.includes(i) || (s.loop && c === s.grid[s.path[0]]);
         return <Circle key={i} cx={p.x} cy={p.y} r={on ? 14 : 11} fill={FLOW_COLORS[c]} />;
       })}
-    </>
-  );
-}
-
-function TiltView({ s, orbFill, orbStroke, orbEmoji, color }: { s: TiltState } & Orb) {
-  return (
-    <>
-      <Circle
-        cx={160}
-        cy={160}
-        r={TILT.exit}
-        stroke={color}
-        strokeOpacity={0.25}
-        strokeWidth={2}
-        strokeDasharray="4 8"
-        fill="none"
-      />
-      {s.rings.map((g, i) => {
-        // Draw the wall as a single arc that skips the gap.
-        const h = TILT.gapHalf;
-        const a0 = g.gap + h;
-        const a1 = g.gap + Math.PI * 2 - h;
-        const p0 = { x: 160 + g.r * Math.cos(a0), y: 160 + g.r * Math.sin(a0) };
-        const p1 = { x: 160 + g.r * Math.cos(a1), y: 160 + g.r * Math.sin(a1) };
-        const open = inGap(g, Math.atan2(s.y - 160, s.x - 160));
-        return (
-          <Path
-            key={i}
-            d={`M${p0.x} ${p0.y} A${g.r} ${g.r} 0 1 1 ${p1.x} ${p1.y}`}
-            stroke={open ? color : colors.textFaint}
-            strokeWidth={TILT.wall * 2}
-            strokeLinecap="round"
-            fill="none"
-          />
-        );
-      })}
-      <SkinDot
-        cx={s.x}
-        cy={s.y}
-        r={orbEmoji ? TILT.ball + 3 : TILT.ball}
-        fill={orbFill}
-        stroke={orbStroke}
-        emoji={orbEmoji}
-      />
     </>
   );
 }
@@ -479,50 +413,6 @@ function StackView({ s, orbFill, orbStroke, orbEmoji, color }: { s: StackState }
       <SvgText fontFamily={fonts.bodyBold} x={20} y={30} fill={colors.textMuted} fontSize={15}>
         {`LV ${s.level}`}
       </SvgText>
-    </>
-  );
-}
-
-function DuelView({ s, orbFill, orbStroke, orbEmoji }: { s: DuelState } & Orb) {
-  const g = DUEL.goalHalf;
-  const bot = s.mode === 'bot';
-  return (
-    <>
-      <Line x1={0} y1={160} x2={320} y2={160} stroke={colors.outline} strokeWidth={2} strokeDasharray="6 6" />
-      <Circle cx={160} cy={160} r={36} stroke={colors.outline} strokeWidth={2} fill="none" />
-      <Rect x={160 - g} y={-4} width={g * 2} height={10} rx={5} fill="#FF5E7E" />
-      <Rect x={160 - g} y={314} width={g * 2} height={10} rx={5} fill="#5AC8FA" />
-      <SvgText fontFamily={fonts.bodyBold} x={18} y={150} fill="#FF5E7E" fontSize={22}>
-        {s.goals[1]}
-      </SvgText>
-      <SvgText fontFamily={fonts.bodyBold} x={18} y={186} fill="#5AC8FA" fontSize={22}>
-        {s.goals[0]}
-      </SvgText>
-      <SvgText fontFamily={fonts.bodyBold} x={302} y={150} fill={colors.textFaint} fontSize={11} textAnchor="end">
-        {bot ? 'BOT' : 'PLAYER 2'}
-      </SvgText>
-      <SvgText fontFamily={fonts.bodyBold} x={302} y={180} fill={colors.textFaint} fontSize={11} textAnchor="end">
-        {bot ? 'YOU' : 'PLAYER 1'}
-      </SvgText>
-      <Circle
-        cx={s.paddles[1].x}
-        cy={s.paddles[1].y}
-        r={DUEL.paddle}
-        fill="#FF5E7E"
-        fillOpacity={0.25}
-        stroke="#FF5E7E"
-        strokeWidth={4}
-      />
-      <Circle
-        cx={s.paddles[0].x}
-        cy={s.paddles[0].y}
-        r={DUEL.paddle}
-        fill="#5AC8FA"
-        fillOpacity={0.25}
-        stroke="#5AC8FA"
-        strokeWidth={4}
-      />
-      <SkinDot cx={s.puck.x} cy={s.puck.y} r={DUEL.puck} fill={orbFill} stroke={orbStroke} emoji={orbEmoji} />
     </>
   );
 }

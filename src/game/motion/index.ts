@@ -1,17 +1,46 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- build-time conditional requires exclude deferred modules */
+import type { ChainState } from './chain';
+import type { DuelState } from './duel';
+import type { TiltState } from './tilt';
+import { DEFERRED_ENABLED } from '../availability';
 import { createArena, inputArena, stepArena, type ArenaState } from './arena';
-import { createChain, inputChain, stepChain, type ChainState } from './chain';
 import { createCharge, inputCharge, stepCharge, type ChargeState } from './charge';
 import type { MotionInput } from './common';
 import { createDrift, inputDrift, stepDrift, type DriftState } from './drift';
-import { createDuel, inputDuel, stepDuel, type DuelState } from './duel';
 import { createFlow, inputFlow, stepFlow, type FlowState } from './flow';
 import { createPaint, inputPaint, stepPaint, type PaintState } from './paint';
 import { createStack, inputStack, stepStack, type StackState } from './stack';
 import { createSwipe, inputSwipe, stepSwipe, type SwipeState } from './swipe';
-import { createTilt, inputTilt, stepTilt, type TiltState } from './tilt';
 
+// Conditional requires are intentional: release Metro must not include deferred rules/resources.
+const deferred =
+  process.env.EXPO_PUBLIC_ENABLE_DEFERRED_GAMES === '1' ||
+  (__DEV__ && process.env.EXPO_PUBLIC_DEV_DEFERRED_GAMES === '1') ||
+  process.env.NODE_ENV === 'test'
+    ? (require('./deferred') as typeof import('./deferred'))
+    : null;
+const deferredRules = deferred?.DEFERRED_RULES,
+  deferredMeta = deferred?.DEFERRED_META;
+const emptyMeta = {
+  name: '',
+  color: '',
+  tag: '',
+  gesture: '',
+  description: '',
+  instruction: '',
+  unit: '',
+  action: null,
+};
+const unavailable = {
+  create: () => {
+    throw new Error('Game disabled');
+  },
+  step: <T>(s: T) => s,
+  input: <T>(s: T) => s,
+};
 export const MOTION_GAMES = [
   {
+    enabled: true,
     id: 'arena',
     name: 'Dot Arena',
     color: '#4CE0B3',
@@ -23,6 +52,7 @@ export const MOTION_GAMES = [
     action: 'Dash',
   },
   {
+    enabled: true,
     id: 'paint',
     name: 'Dot Paint',
     color: '#FF7AD9',
@@ -34,19 +64,10 @@ export const MOTION_GAMES = [
     unit: '% land',
     action: null,
   },
+  { id: 'duel', ...emptyMeta, ...deferredMeta?.duel, enabled: DEFERRED_ENABLED }, // TODO(deferred): docs/DEFERRED_GAMES.md
+
   {
-    id: 'duel',
-    name: 'Dot Duel',
-    color: '#FF5E7E',
-    tag: '2 PLAYERS · ONE PHONE',
-    gesture: 'Two-finger duel',
-    description: 'Face to face. First to five.',
-    instruction:
-      'Drag your paddle in your half and knock the puck into the other goal. Play a friend on the same phone, or the bot.',
-    unit: 'goals',
-    action: null,
-  },
-  {
+    enabled: true,
     id: 'drift',
     name: 'Dot Drift',
     color: '#FFC94D',
@@ -58,6 +79,7 @@ export const MOTION_GAMES = [
     action: null,
   },
   {
+    enabled: true,
     id: 'charge',
     name: 'Dot Jump',
     color: '#FF5E7E',
@@ -69,6 +91,7 @@ export const MOTION_GAMES = [
     action: null,
   },
   {
+    enabled: true,
     id: 'swipe',
     name: 'Dot Sort',
     color: '#5AC8FA',
@@ -79,18 +102,10 @@ export const MOTION_GAMES = [
     unit: 'sorts',
     action: null,
   },
+  { id: 'chain', ...emptyMeta, ...deferredMeta?.chain, enabled: DEFERRED_ENABLED }, // TODO(deferred): docs/DEFERRED_GAMES.md
+
   {
-    id: 'chain',
-    name: 'Dot Chain',
-    color: '#FF8A4C',
-    tag: 'ONE SPARK',
-    gesture: 'One tap',
-    description: 'One spark. Make it count.',
-    instruction: 'Tap once to spark a blast. Every dot it touches explodes too. Pop enough to clear the level.',
-    unit: 'popped',
-    action: null,
-  },
-  {
+    enabled: true,
     id: 'flow',
     name: 'Dot Link',
     color: '#B48CFF',
@@ -101,18 +116,10 @@ export const MOTION_GAMES = [
     unit: 'dots',
     action: null,
   },
+  { id: 'tilt', ...emptyMeta, ...deferredMeta?.tilt, enabled: DEFERRED_ENABLED }, // TODO(deferred): docs/DEFERRED_GAMES.md
+
   {
-    id: 'tilt',
-    name: 'Dot Maze',
-    color: '#C8F560',
-    tag: 'TILT',
-    gesture: 'Tilt',
-    description: 'Roll out of the spinning maze.',
-    instruction: 'Tilt your phone to roll through the gaps and escape. You can also drag to pull the orb.',
-    unit: 'escapes',
-    action: null,
-  },
-  {
+    enabled: true,
     id: 'stack',
     name: 'Dot Stack',
     color: '#7A9CFF',
@@ -151,11 +158,11 @@ export const MOTION_RULES: { [K in MotionId]: Rules<MotionStates[K]> } = {
   drift: { create: createDrift, step: stepDrift, input: inputDrift },
   charge: { create: createCharge, step: stepCharge, input: inputCharge },
   swipe: { create: createSwipe, step: stepSwipe, input: inputSwipe },
-  chain: { create: createChain, step: stepChain, input: inputChain },
+  chain: deferredRules?.chain ?? unavailable,
   flow: { create: createFlow, step: stepFlow, input: inputFlow },
-  tilt: { create: createTilt, step: stepTilt, input: inputTilt },
+  tilt: deferredRules?.tilt ?? unavailable,
   stack: { create: createStack, step: stepStack, input: inputStack },
-  duel: { create: createDuel, step: stepDuel, input: inputDuel },
+  duel: deferredRules?.duel ?? unavailable,
   paint: { create: createPaint, step: stepPaint, input: inputPaint },
 };
 // Erases the per-game generic so screens can hold any game's state.

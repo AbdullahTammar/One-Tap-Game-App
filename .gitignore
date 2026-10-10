@@ -53,6 +53,7 @@ GoogleService-Info.plist
 *.pfx
 .foundation-export/
 .foundation-dev-export/
+.jest-tmp/
 
 # CanvasKit wasm for the web preview (copied by `npm run web`)
 public/canvaskit.wasm

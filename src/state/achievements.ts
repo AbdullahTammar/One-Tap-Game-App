@@ -1,3 +1,4 @@
+import { PLAYER_ACHIEVEMENTS, playerStats } from '../game/achievementAvailability';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { coinsFor, newlyUnlocked, type Achievement, type PlayStats } from '../game/achievements';
@@ -52,8 +53,11 @@ export function currentStats(counters: Counters): PlayStats {
 export const useAchievements = create<AchievementState>()(
   persist(
     (set, get) => {
-      const unlockAll = (counters: Counters) => {
-        const fresh = newlyUnlocked(currentStats(counters), get().unlocked);
+      const unlockAll = (counters: Counters, legacy = false) => {
+        const stats = playerStats(currentStats(counters));
+        const fresh = legacy
+          ? newlyUnlocked(currentStats(counters), get().unlocked)
+          : PLAYER_ACHIEVEMENTS.filter((a) => !get().unlocked[a.id] && a.progress(stats) >= a.goal);
         if (!fresh.length) return fresh;
         const now = Date.now();
         set((s) => ({
@@ -87,7 +91,7 @@ export const useAchievements = create<AchievementState>()(
           // Dot Runner pays its own coins through the run economy.
           const coins = r.id === 'runner' ? 0 : coinsFor(r.id, r.score);
           if (coins) useProgress.getState().addCoins(coins);
-          return { coins, unlocked: unlockAll(counters) };
+          return { coins, unlocked: unlockAll(counters, r.id === 'duel' || r.id === 'chain' || r.id === 'tilt') };
         },
         reportShare: () => {
           const counters = { ...get().counters, shares: get().counters.shares + 1 };

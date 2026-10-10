@@ -11,7 +11,8 @@ import { MOTION_GAMES } from '../../game/motion';
 import { getSkin } from '../../game/skins';
 import { useArcadeProgress } from '../../state/arcade';
 import { useAchievements } from '../../state/achievements';
-import { ACHIEVEMENTS } from '../../game/achievements';
+import { PLAYER_ACHIEVEMENTS as ACHIEVEMENTS } from '../../game/achievementAvailability';
+import { PLAYER_GAME_COUNT } from '../../game/availability';
 import { useProgress } from '../../state/progress';
 import { liveStreak } from '../../state/progressLogic';
 import { useAccent } from '../../state/settings';
@@ -27,7 +28,7 @@ export default function Home() {
   const daily = useProgress((s) => (s.dailyDay === dayKey() ? s.dailyGates : 0));
   const claimed = useProgress((s) => s.dailyDay === dayKey() && s.dailyClaimed);
   const skin = getSkin(equipped);
-  const trophies = useAchievements((s) => Object.keys(s.unlocked).length);
+  const trophies = useAchievements((s) => ACHIEVEMENTS.filter((a) => !!s.unlocked[a.id]).length);
   const goal = ECONOMY.dailyGoalGates;
   return (
     <Screen>
@@ -45,7 +46,7 @@ export default function Home() {
           <AppText variant="title" accessibilityRole="header">
             Small circles.{'\n'}Big obsession.
           </AppText>
-          <AppText>Fourteen ways to play. Tap, drag, swipe, draw, tilt, battle — or duel a friend.</AppText>
+          <AppText>{PLAYER_GAME_COUNT} ways to play. Tap, drag, swipe, draw and battle.</AppText>
         </View>
         <ScalePressable
           onPress={() => router.push('/achievements')}
@@ -121,9 +122,9 @@ export default function Home() {
           <AppText variant="heading" accessibilityRole="header">
             Move & play
           </AppText>
-          <AppText variant="label">{MOTION_GAMES.length} NEW GAMES</AppText>
+          <AppText variant="label">{MOTION_GAMES.filter((g) => g.enabled).length} GAMES</AppText>
         </Row>
-        {MOTION_GAMES.map((game, index) => (
+        {MOTION_GAMES.filter((g) => g.enabled).map((game, index) => (
           <ScalePressable
             key={game.id}
             accessibilityLabel={`Play ${game.name}. ${game.description} Best score ${arcadeBest[game.id]}`}

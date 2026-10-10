@@ -1,6 +1,6 @@
 # The Circle Collection
 
-Lumo now opens to a four-game library. Dot Runner is the original game and stays first, with its existing scores, coins, ranks, daily goal, and results flow.
+Lumo opens to an 11-game library: these four circle games plus seven Move & Play games. Dot Runner is the original game and stays first, with its existing scores, coins, ranks, daily goal, and results flow.
 
 | Game       | One-tap action                                            | Score          |
 | ---------- | --------------------------------------------------------- | -------------- |
@@ -15,7 +15,7 @@ The three new games have independent persistent personal bests. They use the equ
 
 Captured from the running Expo web preview at a 390 × 844 phone viewport. These are browser captures, not native-device screenshots. The original native screenshots remain in `screenshots/`.
 
-<p><img src="screenshots/circle-library.jpg" width="220" alt="Library featuring the original Dot Runner"> <img src="screenshots/circle-games.jpg" width="220" alt="Pulse, Orbit Switch, and Dot Lock cards"></p>
+<p><img src="screenshots/circle-library.jpg" width="220" alt="Library featuring the original Dot Runner"> </p>
 <p><img src="screenshots/pulse.jpg" width="220" alt="Pulse rings"> <img src="screenshots/orbit-switch.jpg" width="220" alt="Orbit Switch lanes"> <img src="screenshots/dot-lock.jpg" width="220" alt="Dot Lock target"></p>
 
 ## Implementation

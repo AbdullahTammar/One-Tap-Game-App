@@ -35,9 +35,9 @@ Ship JS-only fixes without a store review: `eas update --channel production` (re
 
 | Field                        | Suggested                                                                    |
 | ---------------------------- | ---------------------------------------------------------------------------- |
-| Name                         | Lumo: One Tap Orbit                                                          |
-| Subtitle (iOS, 30 chars)     | One tap. Perfect timing.                                                     |
-| Short description (Play, 80) | Tap as the orb crosses the gate. Every hit flips it and speeds it up.        |
+| Name                         | Lumo: The Circle Collection                                                  |
+| Subtitle (iOS, 30 chars)     | 11 games. Endless circles.                                                   |
+| Short description (Play, 80) | 11 circle games. Tap, drag, swipe, draw and battle in one collection.        |
 | Category                     | Games → Arcade (or Casual)                                                   |
 | Age rating                   | 4+ / Everyone (no violence; ads rated PG via `maxAdContentRating`)           |
 | Keywords (iOS)               | one tap,orbit,timing,reflex,arcade,casual,hyper casual,ring,tap game,offline |
@@ -76,3 +76,5 @@ Ship JS-only fixes without a store review: `eas update --channel production` (re
 - Watch crashes (Play Vitals / Xcode Organizer). Consider adding `@sentry/react-native`.
 - Watch D1 retention before buying any user acquisition.
 - Iterate on `AdPacing`, `ECONOMY` and skin prices. They're all constants in one place.
+
+Default collection: 11 games and 22 visible achievements. Maze, Duel and Chain are deferred ideas (DEFERRED_GAMES.md), not release features. Recapture overview/achievement screenshots for this catalog before submission.

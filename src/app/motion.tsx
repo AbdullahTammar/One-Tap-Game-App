@@ -1,11 +1,11 @@
-import { Accelerometer } from 'expo-sensors';
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+/* eslint-disable @typescript-eslint/no-require-imports -- build-time conditional requires exclude deferred modules */
+import { gameEnabled } from '../game/availability';
+import { Redirect, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AppState,
   BackHandler,
   Keyboard,
-  Platform,
   Share,
   TextInput,
   StyleSheet,
@@ -39,10 +39,17 @@ import { ARENA } from '../game/motion/arena';
 import { cleanName, displayName, NAME_MAX, useSettings } from '../state/settings';
 import type { DuelState } from '../game/motion/duel';
 import { colors, fonts } from '../theme';
+const useDeferredSensor: typeof import('../game/motion/useDeferredSensor').useDeferredSensor =
+  process.env.EXPO_PUBLIC_ENABLE_DEFERRED_GAMES === '1' ||
+  (__DEV__ && process.env.EXPO_PUBLIC_DEV_DEFERRED_GAMES === '1') ||
+  process.env.NODE_ENV === 'test'
+    ? require('../game/motion/useDeferredSensor').useDeferredSensor
+    : () => {};
 
 export default function MotionRoute() {
   const { game } = useLocalSearchParams<{ game?: string }>();
   const meta = MOTION_GAMES.find((g) => g.id === game);
+  if (!gameEnabled(game)) return <Redirect href="/" />;
   if (!meta || !isMotionId(game))
     return (
       <Screen edges={['top', 'bottom']}>
@@ -57,6 +64,7 @@ export default function MotionRoute() {
 
 function MotionGame({ meta }: { meta: MotionMeta }) {
   const id = meta.id;
+  const gameId = id;
   const [fieldWidth, setFieldWidth] = useState(320);
   const playerName = useSettings((s) => s.playerName);
   const named = id === 'arena' || id === 'paint';
@@ -149,26 +157,7 @@ function MotionGame({ meta }: { meta: MotionMeta }) {
   }, [state.phase, commit, id]);
   // Dot Maze reads the accelerometer on devices; the web preview falls back to dragging.
   const running = state.phase === 'running';
-  useEffect(() => {
-    if (id !== 'tilt' || !running || Platform.OS === 'web') return;
-    let sub: { remove: () => void } | null = null;
-    let cancelled = false;
-    Accelerometer.isAvailableAsync()
-      .then((ok) => {
-        if (!ok || cancelled) return;
-        Accelerometer.setUpdateInterval(16);
-        // iOS reports gravity with the opposite sign to Android.
-        const sign = Platform.OS === 'ios' ? 1 : -1;
-        sub = Accelerometer.addListener(({ x, y }) =>
-          commit(inputMotion(id, current.current, { type: 'tilt', x: sign * x * 1.6, y: -sign * y * 1.6 }), false),
-        );
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-      sub?.remove();
-    };
-  }, [id, running, commit]);
+  useDeferredSensor(gameId, running, current, commit);
   const send = useCallback((ev: MotionInput) => commit(inputMotion(id, current.current, ev), false), [commit, id]);
   const scale = 320 / fieldWidth;
   const at = (type: 'down' | 'move' | 'up', e: GestureResponderEvent) => {

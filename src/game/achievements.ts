@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- build-time conditional requires exclude deferred modules */
 /** Achievements: pure definitions checked against lifetime stats. Rewards are paid in coins. */
 export interface PlayStats {
   plays: number;
@@ -29,7 +30,9 @@ const best = (id: string) => (s: PlayStats) => s.best[id] ?? 0;
 const distinct = (s: PlayStats) => Object.values(s.playedBy).filter((n) => n > 0).length;
 export const TOTAL_GAMES = 14;
 
+const deferredAchievements: readonly Achievement[] = process.env.EXPO_PUBLIC_ENABLE_DEFERRED_GAMES === '1' || (__DEV__ && process.env.EXPO_PUBLIC_DEV_DEFERRED_GAMES === '1') || process.env.NODE_ENV === 'test' ? require('./deferredAchievements').DEFERRED_ACHIEVEMENTS : [];
 export const ACHIEVEMENTS: readonly Achievement[] = [
+  ...deferredAchievements,
   {
     id: 'first',
     icon: '🔵',
@@ -129,24 +132,8 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     goal: 5,
     progress: (s) => s.paintKills,
   },
-  {
-    id: 'duelist',
-    icon: '🏒',
-    title: 'Duelist',
-    description: 'Win a Dot Duel.',
-    reward: 200,
-    goal: 1,
-    progress: (s) => s.duelWins,
-  },
-  {
-    id: 'couple',
-    icon: '💞',
-    title: 'Better Together',
-    description: 'Play 3 two-player Dot Duels.',
-    reward: 250,
-    goal: 3,
-    progress: (s) => s.duoMatches,
-  },
+
+
   {
     id: 'runner',
     icon: '⚡',
@@ -210,15 +197,7 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     goal: 50,
     progress: best('swipe'),
   },
-  {
-    id: 'chain',
-    icon: '💥',
-    title: 'Chain Master',
-    description: 'Pop 150 dots in one Dot Chain run.',
-    reward: 300,
-    goal: 150,
-    progress: best('chain'),
-  },
+
   {
     id: 'linker',
     icon: '🔗',
@@ -228,15 +207,7 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     goal: 1000,
     progress: (s) => s.linked,
   },
-  {
-    id: 'maze',
-    icon: '🌀',
-    title: 'Escape Artist',
-    description: 'Escape 10 mazes in one Dot Maze run.',
-    reward: 300,
-    goal: 10,
-    progress: best('tilt'),
-  },
+
   {
     id: 'stacker',
     icon: '🏗️',
