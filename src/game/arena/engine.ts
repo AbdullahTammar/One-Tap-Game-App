@@ -25,6 +25,8 @@ export enum F {
   fields,
 }
 export interface ArenaBuffers {
+  /** Frozen migration comparison only; live matches use improved combat. */
+  classicCombat: boolean;
   orbs: Float64Array;
   pool: Pool;
   order: Uint8Array;
@@ -67,6 +69,7 @@ export interface ArenaBuffers {
   brainX: number;
   brainY: number;
   brainDash: boolean;
+  brainSpeed: number;
   best: number;
   baseKills: number;
   achievementMask: number;
@@ -191,8 +194,9 @@ export function resetArena(s: ArenaBuffers, seed = s.seed) {
   }
   for (let i = 0; i < Math.min(3, s.count); i++) s.top[i] = s.sorted[i];
 }
-export function createArenaBuffers(seed: number, best = 0, baseKills = 0): ArenaBuffers {
+export function createArenaBuffers(seed: number, best = 0, baseKills = 0, classicCombat = false): ArenaBuffers {
   const s: ArenaBuffers = {
+    classicCombat,
     orbs: new Float64Array(F.fields * ORB_CAPACITY),
     pool: createPool(ORB_CAPACITY),
     order: new Uint8Array(ORB_CAPACITY),
@@ -235,6 +239,7 @@ export function createArenaBuffers(seed: number, best = 0, baseKills = 0): Arena
     brainX: 0,
     brainY: 0,
     brainDash: false,
+    brainSpeed: 0.82,
     best,
     baseKills,
     achievementMask: 0,
@@ -274,10 +279,15 @@ function bot(s: ArenaBuffers, me: number) {
     if (o === me || !orb(s, F.alive, o)) continue;
     const d = distance(x, y, orb(s, F.x, o), orb(s, F.y, o)),
       m = orb(s, F.mass, o);
-    if (m > mass * 1.15 && d < 160 + radius(m) && d < threatD) {
+    if (
+      m > mass * 1.15 &&
+      (s.classicCombat || orb(s, F.shield, me) <= 0) &&
+      d < (s.classicCombat ? 160 : 90) + radius(m) &&
+      d < threatD
+    ) {
       threat = o;
       threatD = d;
-    } else if (mass > m * 1.25 && orb(s, F.shield, o) <= 0 && d < 220 + r && d < preyD) {
+    } else if (mass > m * (s.classicCombat ? 1.25 : 1.15) && orb(s, F.shield, o) <= 0 && d < 220 + r && d < preyD) {
       prey = o;
       preyD = d;
     }
@@ -286,7 +296,10 @@ function bot(s: ArenaBuffers, me: number) {
     cy = ARENA.world / 2 - y;
   const out = Math.hypot(cx, cy) > s.zone - r - 40;
   s.brainDash = false;
+  s.brainSpeed = 0.82;
   if (threat >= 0) {
+    // Fleeing sacrifices speed for awareness; predators can eventually close the gap.
+    s.brainSpeed = 0.7;
     const dx = x - orb(s, F.x, threat),
       dy = y - orb(s, F.y, threat),
       n = Math.hypot(dx, dy) || 1,
@@ -298,9 +311,13 @@ function bot(s: ArenaBuffers, me: number) {
     s.brainX = cx;
     s.brainY = cy;
   } else if (prey >= 0) {
-    s.brainX = orb(s, F.x, prey) - x;
-    s.brainY = orb(s, F.y, prey) - y;
-    s.brainDash = preyD < r + 70 && mass > orb(s, F.mass, prey) * 1.6;
+    const lead = s.classicCombat ? 0 : Math.min(0.6, preyD / 120);
+    s.brainX = orb(s, F.x, prey) + orb(s, F.vx, prey) * lead - x;
+    s.brainY = orb(s, F.y, prey) + orb(s, F.vy, prey) * lead - y;
+    // Only dash if the mass cost still leaves enough size to swallow the target.
+    s.brainDash =
+      preyD < r + (s.classicCombat ? 70 : 100) &&
+      mass > orb(s, F.mass, prey) * (s.classicCombat ? 1.6 : 1.15 / (1 - ARENA.dashCost));
   } else {
     s.brainX = orb(s, F.hx, me);
     s.brainY = orb(s, F.hy, me);
@@ -315,7 +332,11 @@ function move(s: ArenaBuffers, slot: number, dx: number, dy: number, dash: boole
     put(s, F.dashT, slot, 0.28);
   }
   const mass = orb(s, F.mass, slot),
-    sp = (260 / Math.pow(mass, 0.3)) * (orb(s, F.dashT, slot) > 0 ? 2.8 : 1) * Math.min(n, 1);
+    sp =
+      (260 / Math.pow(mass, 0.3)) *
+      (s.classicCombat || orb(s, F.id, slot) === 0 ? 1 : s.brainSpeed) *
+      (orb(s, F.dashT, slot) > 0 ? 2.8 : 1) *
+      Math.min(n, 1);
   const tx = n ? (dx / n) * sp : 0,
     ty = n ? (dy / n) * sp : 0,
     k = 1 - Math.exp(-8 * dt);
@@ -334,7 +355,9 @@ export function canEatSlots(s: ArenaBuffers, a: number, b: number) {
     orb(s, F.mass, a) > orb(s, F.mass, b) * 1.15 &&
     orb(s, F.shield, b) <= 0 &&
     distance(orb(s, F.x, a), orb(s, F.y, a), orb(s, F.x, b), orb(s, F.y, b)) <
-      radius(orb(s, F.mass, a)) - radius(orb(s, F.mass, b)) * 0.4
+      (s.classicCombat
+        ? radius(orb(s, F.mass, a)) - radius(orb(s, F.mass, b)) * 0.4
+        : (radius(orb(s, F.mass, a)) + radius(orb(s, F.mass, b))) * 0.75)
   );
 }
 /** Stable insertion order for equal masses: matches legacy stable Array.sort, in bounded workspace. */
@@ -354,7 +377,7 @@ function sortOrbs(s: ArenaBuffers): number {
   }
   return count;
 }
-/** Pure bounded legacy-equivalent tick. Same dt/input => bit-exact numerics; production supplies 1/120. */
+/** Bounded combat tick; classicCombat retains the frozen migration baseline. */
 export function stepArenaBuffers(s: ArenaBuffers, rawDt: number, events?: EventBus) {
   'worklet';
   const dt = Number.isFinite(rawDt) && rawDt > 0 ? Math.min(rawDt, 0.05) : 0;

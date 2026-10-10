@@ -2,7 +2,7 @@
 
 Plan: freeze the legacy oracle, hide the three deferred games, then port Arena
 physics, inputs, drawing and persistence; validate before each of the two commits.
-Dot Paint and the other legacy engines are not migrated. No tuning constants changed.
+Dot Paint and the other legacy engines are not migrated. The initial migration kept tuning constants unchanged.
 Risk list: native typed-array/Skia runtime behavior needs device smoke tests;
 fixed timestep changes trajectories; pictures/paths still have native allocation
 cost; storage failures require a durable outbox and idempotent projections; frame
@@ -28,6 +28,23 @@ development comparator; this change does not claim all legacy Arena code is
 removed. Public builds cannot select the legacy Arena route through query params.
 
 ## Physics and oracle evidence
+
+### Follow-up: playable combat
+
+Live worklet Arena now swallows an unshielded dot with more than a 15% mass
+advantage when centers are within 75% of their combined radii. This makes visible
+overlap count instead of requiring almost complete containment. Equal-size dots
+and shielded targets remain protected; the rule applies equally to players and bots.
+Bots move at 82% of the equivalent player speed (70% while fleeing), detect threats closer (90 world
+units plus predator radius), lead moving prey by up to 0.6 seconds, and hunt at the
+same mass threshold as eating. Chase dashes must retain the eating advantage after
+their mass cost. Shielded bots can pursue instead of fleeing harmless threats.
+
+The dev Legacy button deliberately remains the original baseline. Frozen trace
+tests explicitly use `classicCombat=true`; normal creation and reset retain the
+improved rules. New tests cover overlap, shields, equal mass, catching fleeing bots,
+bot-on-bot consumption, interception and dash safety. Compare performance on the
+baseline with awareness that live gameplay now also differs in combat tuning.
 
 scripts/freeze-arena.cjs captured the unmodified legacy engine before any engine
 port. fixtures/arena-legacy.json is immutable evidence, not an expectation file to

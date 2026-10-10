@@ -71,7 +71,7 @@ const hash = (s: unknown) => createHash('sha256').update(JSON.stringify(s)).dige
 test.each(traces)('frozen $name trace at dt=$dt matches both legacy and preallocated engine exactly', (trace) => {
   let old = createArena(trace.seed, 'Trace');
   old.phase = 'running';
-  const next = createArenaBuffers(trace.seed);
+  const next = createArenaBuffers(trace.seed, 0, 0, true);
   if (trace.name !== 'scripted') {
     const mass = trace.name === 'match' ? 2000 : 100,
       shield = trace.name === 'match' ? 1000 : 0;

@@ -105,3 +105,70 @@ test('cancel clears joystick without resurrecting an unconsumed down latch; inva
   for (const dt of [NaN, Infinity, 0, -1]) stepArenaBuffers(s, dt);
   expect(s.elapsed).toBe(elapsed);
 });
+
+function combatPair(predator: number, prey: number) {
+  const s = createArenaBuffers(42);
+  s.count = Math.max(predator, prey) + 1;
+  s.pelletX.fill(1300);
+  s.pelletY.fill(1300);
+  for (let i = 0; i < s.count; i++) {
+    put(s, F.x, i, i === predator ? 700 : i === prey ? 755 : 300);
+    put(s, F.y, i, i === predator || i === prey ? 700 : 300);
+    put(s, F.mass, i, i === predator ? 100 : 70);
+    put(s, F.shield, i, 0);
+    put(s, F.dashCd, i, 100);
+  }
+  return s;
+}
+
+test('visible overlap eats smaller dots, but equal size and shields remain safe', () => {
+  const s = combatPair(0, 1);
+  expect(canEatSlots(s, 0, 1)).toBe(true);
+  s.classicCombat = true;
+  expect(canEatSlots(s, 0, 1)).toBe(false);
+  s.classicCombat = false;
+  put(s, F.shield, 1, 1);
+  expect(canEatSlots(s, 0, 1)).toBe(false);
+  put(s, F.shield, 1, 0);
+  put(s, F.mass, 1, 100);
+  expect(canEatSlots(s, 0, 1)).toBe(false);
+});
+
+test('player can catch a fleeing smaller bot without dash', () => {
+  const s = combatPair(0, 1);
+  put(s, F.x, 1, 790);
+  s.cmdX = 1;
+  for (let i = 0; i < 120 * 8 && s.kills === 0; i++) stepArenaBuffers(s, 1 / 120);
+  expect(s.kills).toBeGreaterThan(0);
+  expect(s.over).toBe(false);
+});
+
+test('bots eat each other and do not register player kills', () => {
+  const s = combatPair(1, 2);
+  const preyId = orb(s, F.id, 2);
+  stepArenaBuffers(s, 1 / 120);
+  expect(Array.from(s.order.subarray(0, s.count), (slot) => orb(s, F.id, slot))).not.toContain(preyId);
+  expect(orb(s, F.mass, 1)).toBeGreaterThan(150);
+  expect(s.kills).toBe(0);
+});
+
+test('bot intercepts moving prey and refuses a dash that would lose its size advantage', () => {
+  const s = combatPair(1, 2);
+  put(s, F.x, 2, 800);
+  put(s, F.vy, 2, 50);
+  put(s, F.dashCd, 1, 0);
+  put(s, F.mass, 1, 82);
+  stepArenaBuffers(s, 1 / 120);
+  expect(orb(s, F.vy, 1)).toBeGreaterThan(0);
+  expect(orb(s, F.dashCd, 1)).toBe(0);
+});
+
+test('hunting bot can close on fleeing prey with a safe dash', () => {
+  const s = combatPair(1, 2);
+  const preyId = orb(s, F.id, 2);
+  put(s, F.x, 2, 790);
+  put(s, F.dashCd, 1, 0);
+  for (let i = 0; i < 120 * 8 && orb(s, F.alive, 2); i++) stepArenaBuffers(s, 1 / 120);
+  expect(Array.from(s.order.subarray(0, s.count), (slot) => orb(s, F.id, slot))).not.toContain(preyId);
+  expect(s.kills).toBe(0);
+});
