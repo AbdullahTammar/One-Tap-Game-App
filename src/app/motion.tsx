@@ -16,6 +16,7 @@ import { AppText } from '../components/AppText';
 import { PrimaryButton, SecondaryButton } from '../components/Buttons';
 import { MotionArt } from '../components/MotionArt';
 import { motionPoint } from '../game/motion/viewport';
+import type { FlowState } from '../game/motion/flow';
 import { Screen } from '../components/UI';
 import { GameHeader, GameStage, SessionOverlay } from '../components/GameSession';
 import {
@@ -181,7 +182,13 @@ function MotionGame({ meta, seed, stress }: { meta: MotionMeta; seed?: number; s
       const previous = lastFrame.current;
       lastFrame.current = now;
       // Keep simulation/input responsive, but avoid reconciling hundreds of SVG nodes every frame.
-      const publish = now - lastPaint.current >= 1000 / (id === 'arena' || id === 'paint' ? 30 : 60);
+      const renderRate =
+        id === 'flow' && (current.current as FlowState).burstLeft <= 0
+          ? 10
+          : id === 'arena' || id === 'paint'
+            ? 30
+            : 60;
+      const publish = now - lastPaint.current >= 1000 / renderRate;
       if (publish) lastPaint.current = now;
       if (previous !== null) commit(stepMotion(id, current.current, (now - previous) / 1000), publish);
       if (current.current.phase === 'running') frame = requestAnimationFrame(tick);
@@ -195,7 +202,18 @@ function MotionGame({ meta, seed, stress }: { meta: MotionMeta; seed?: number; s
   // Dot Maze reads the accelerometer on devices; the web preview falls back to dragging.
   const running = state.phase === 'running';
   useDeferredSensor(gameId, running, current, commit);
-  const send = useCallback((ev: MotionInput) => commit(inputMotion(id, current.current, ev), false), [commit, id]);
+  const send = useCallback(
+    (ev: MotionInput) => {
+      const previous = current.current;
+      const next = inputMotion(id, previous, ev);
+      const publish =
+        id === 'flow' &&
+        ((next as FlowState).path !== (previous as FlowState).path ||
+          (next as FlowState).grid !== (previous as FlowState).grid);
+      commit(next, publish);
+    },
+    [commit, id],
+  );
   const scale = 320 / fieldWidth;
   const at = (type: 'down' | 'move' | 'up', e: GestureResponderEvent) => {
     const { locationX, locationY, touches } = e.nativeEvent;

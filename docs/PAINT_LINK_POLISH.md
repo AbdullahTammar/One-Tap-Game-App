@@ -25,3 +25,10 @@ Manual checks: start Paint, identify YOU, swipe in all directions and close a
 territory loop; follow the player near an edge. Start Link, connect neighboring
 matching dots and release for a burst; close a loop for a color clear. Pause and
 resume both games, and repeat on a narrow or landscape screen.
+
+Link responsiveness follow-up: changed paths and cleared boards publish immediately
+from touch input. Pointer-only updates stay in simulation without reconciliation.
+Fast strokes sample the segment between events (bounded to 80 samples), including
+the final lift, so intermediate dots are not skipped. Different colors and diagonal
+adjacency rules remain enforced. Idle timer rendering is limited to 10Hz; clear
+effects retain 60Hz publication. The board remains interactive during effects.

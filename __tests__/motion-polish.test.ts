@@ -44,3 +44,27 @@ test('Link clear creates bounded animation, expires it, and freezes it while pau
   expect(s.burstLeft).toBe(0);
   expect(s.burst).toEqual([]);
 });
+
+test('fast Link swipes include intermediate matching dots and final lift segment', () => {
+  let s = createFlow(42);
+  s.phase = 'running';
+  s.grid.fill(0);
+  s = inputFlow(s, { type: 'down', ...cellCenter(0) });
+  s = inputFlow(s, { type: 'move', ...cellCenter(4) });
+  expect(s.path).toEqual([0, 1, 2, 3, 4]);
+  s = inputFlow(s, { type: 'up', ...cellCenter(5) });
+  expect(s.score).toBe(6);
+  expect(s.pointer).toBeNull();
+});
+
+test('fast swipes cannot jump over a different color and backtracking still works', () => {
+  let s = createFlow(42);
+  s.phase = 'running';
+  s.grid.fill(0);
+  s.grid[2] = 1;
+  s = inputFlow(s, { type: 'down', ...cellCenter(0) });
+  s = inputFlow(s, { type: 'move', ...cellCenter(4) });
+  expect(s.path).toEqual([0, 1]);
+  s = inputFlow(s, { type: 'move', ...cellCenter(0) });
+  expect(s.path).toEqual([0]);
+});

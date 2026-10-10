@@ -11,6 +11,7 @@ export interface FlowState extends MotionBase {
   burst: number[];
   burstColor: number;
   burstLeft: number;
+  pointer: { x: number; y: number } | null;
 }
 export function cellCenter(i: number) {
   return { x: (i % FLOW.size) * FLOW.cell + FLOW.cell / 2, y: Math.floor(i / FLOW.size) * FLOW.cell + FLOW.cell / 2 };
@@ -37,6 +38,7 @@ export function createFlow(seed: number): FlowState {
     burst: [],
     burstColor: 0,
     burstLeft: 0,
+    pointer: null,
   };
   s.grid = Array.from({ length: FLOW.size * FLOW.size }, () => Math.floor(rand(s) * FLOW.colors));
   return s;
@@ -47,7 +49,7 @@ export function stepFlow(state: FlowState, rawDt: number): FlowState {
   const timeLeft = state.timeLeft - dt;
   const burstLeft = Math.max(0, state.burstLeft - dt);
   return timeLeft <= 0
-    ? { ...state, timeLeft: 0, phase: 'over', path: [], burst: [], burstLeft: 0, note: "Time's up" }
+    ? { ...state, timeLeft: 0, phase: 'over', path: [], pointer: null, burst: [], burstLeft: 0, note: "Time's up" }
     : { ...state, timeLeft, burstLeft, burst: burstLeft > 0 ? state.burst : [] };
 }
 /** Removes cleared cells, drops the dots above them, and refills from the top. */
@@ -64,8 +66,11 @@ export function collapse(s: FlowState, clear: Set<number>) {
 export function inputFlow(state: FlowState, ev: MotionInput): FlowState {
   if (state.phase !== 'running' || ev.type === 'tilt' || ev.type === 'action' || ev.type === 'touches') return state;
   if (ev.type === 'up') {
-    if (state.path.length < 2) return { ...state, path: [], loop: false };
-    const s: FlowState = { ...state, path: [], loop: false, perfect: state.loop };
+    // Process the final segment too: fast lifts can arrive without a last move event.
+    const final = extendStroke(state, ev.x, ev.y);
+    if (final.path.length < 2) return { ...final, path: [], pointer: null, loop: false };
+    state = final;
+    const s: FlowState = { ...state, path: [], pointer: null, loop: false, perfect: state.loop };
     const color = state.grid[state.path[0]];
     const clear = new Set(state.loop ? state.grid.flatMap((c, i) => (c === color ? [i] : [])) : state.path);
     s.burst = Array.from(clear);
@@ -79,9 +84,27 @@ export function inputFlow(state: FlowState, ev: MotionInput): FlowState {
     collapse(s, clear);
     return s;
   }
-  const cell = cellAt(ev.x, ev.y);
+  if (ev.type === 'down') {
+    const cell = cellAt(ev.x, ev.y);
+    return { ...state, path: cell < 0 ? [] : [cell], pointer: { x: ev.x, y: ev.y }, loop: false, note: '' };
+  }
+  return extendStroke(state, ev.x, ev.y);
+}
+
+/** Sample the finger segment, rather than missing dots between sparse native events. */
+function extendStroke(state: FlowState, x: number, y: number): FlowState {
+  const from = state.pointer ?? { x, y };
+  const steps = Math.min(80, Math.max(1, Math.ceil(Math.hypot(x - from.x, y - from.y) / 8)));
+  let next = state;
+  for (let i = 1; i <= steps; i++) {
+    next = extendCell(next, cellAt(from.x + ((x - from.x) * i) / steps, from.y + ((y - from.y) * i) / steps));
+  }
+  return { ...next, pointer: { x, y } };
+}
+
+function extendCell(state: FlowState, cell: number): FlowState {
   if (cell < 0) return state;
-  if (ev.type === 'down' || state.path.length === 0) return { ...state, path: [cell], loop: false, note: '' };
+  if (state.path.length === 0) return { ...state, path: [cell], loop: false, note: '' };
   const path = state.path;
   const last = path[path.length - 1];
   if (cell === last || state.loop) return state;
