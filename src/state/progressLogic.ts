@@ -13,6 +13,8 @@ export interface RunRecord {
 }
 
 export interface ProgressData {
+  /** Durable Arena projection receipts; optional for backwards-compatible saves. */
+  arenaReceipts?: Record<string, true>;
   coins: number;
   best: number;
   totalGames: number;

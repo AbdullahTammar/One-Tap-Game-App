@@ -13,6 +13,7 @@ export const GameHeader = memo(function GameHeader({
   running,
   onPause,
   onLeave,
+  scoreContent,
 }: {
   name: string;
   color: string;
@@ -22,6 +23,7 @@ export const GameHeader = memo(function GameHeader({
   running: boolean;
   onPause: () => void;
   onLeave: () => void;
+  scoreContent?: ReactNode;
 }) {
   return (
     <View style={styles.header}>
@@ -42,9 +44,11 @@ export const GameHeader = memo(function GameHeader({
         </AppText>
       </View>
       <View style={styles.stat}>
-        <AppText color={color} style={styles.score} numberOfLines={1}>
-          {score}
-        </AppText>
+        {scoreContent ?? (
+          <AppText color={color} style={styles.score} numberOfLines={1}>
+            {score}
+          </AppText>
+        )}
         <AppText variant="caption" numberOfLines={1}>
           {unit}
         </AppText>

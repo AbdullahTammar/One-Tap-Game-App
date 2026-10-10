@@ -39,6 +39,10 @@ import { ARENA } from '../game/motion/arena';
 import { cleanName, displayName, NAME_MAX, useSettings } from '../state/settings';
 import type { DuelState } from '../game/motion/duel';
 import { colors, fonts } from '../theme';
+import ArenaSession from '../components/arena/ArenaSession';
+const arenaDev = __DEV__ ? (require('../game/arena/dev/metrics') as typeof import('../game/arena/dev/metrics')) : null;
+const useLegacyCounter = arenaDev?.useArenaRenderCounter ?? (() => {});
+const LegacyProfile = arenaDev?.LegacyArenaProfile;
 const useDeferredSensor: typeof import('../game/motion/useDeferredSensor').useDeferredSensor =
   process.env.EXPO_PUBLIC_ENABLE_DEFERRED_GAMES === '1' ||
   (__DEV__ && process.env.EXPO_PUBLIC_DEV_DEFERRED_GAMES === '1') ||
@@ -47,7 +51,13 @@ const useDeferredSensor: typeof import('../game/motion/useDeferredSensor').useDe
     : () => {};
 
 export default function MotionRoute() {
-  const { game } = useLocalSearchParams<{ game?: string }>();
+  const { game, engine, seed, stress, nonce } = useLocalSearchParams<{
+    game?: string;
+    engine?: string;
+    seed?: string;
+    stress?: string;
+    nonce?: string;
+  }>();
   const meta = MOTION_GAMES.find((g) => g.id === game);
   if (!gameEnabled(game)) return <Redirect href="/" />;
   if (!meta || !isMotionId(game))
@@ -59,16 +69,41 @@ export default function MotionRoute() {
         </View>
       </Screen>
     );
-  return <MotionGame key={meta.id} meta={meta} />;
+  const seedNumber = seed !== undefined && Number.isSafeInteger(Number(seed)) ? Number(seed) : undefined;
+  if (game === 'arena' && (!__DEV__ || engine !== 'legacy'))
+    return (
+      <ArenaSession
+        key={__DEV__ ? `worklet:${seed}:${stress}:${nonce}` : 'arena'}
+        seed={__DEV__ ? seedNumber : undefined}
+        stress={__DEV__ && stress === '1'}
+      />
+    );
+  return (
+    <MotionGame
+      key={meta.id === 'arena' && __DEV__ ? `legacy:${seed}:${stress}:${nonce}` : meta.id}
+      meta={meta}
+      seed={seedNumber ?? (__DEV__ && game === 'arena' ? 42 : undefined)}
+      stress={stress === '1'}
+    />
+  );
 }
 
-function MotionGame({ meta }: { meta: MotionMeta }) {
+function MotionGame({ meta, seed, stress }: { meta: MotionMeta; seed?: number; stress?: boolean }) {
   const id = meta.id;
+  useLegacyCounter(id === 'arena' ? 'LegacyArenaScreen' : 'LegacyMotionScreen');
   const gameId = id;
   const [fieldWidth, setFieldWidth] = useState(320);
   const playerName = useSettings((s) => s.playerName);
   const named = id === 'arena' || id === 'paint';
-  const fresh = useCallback(() => createMotion(id, randomSeed(), displayName(useSettings.getState().playerName)), [id]);
+  const fresh = useCallback(() => {
+    const s = createMotion(
+      id,
+      __DEV__ && id === 'arena' && seed !== undefined ? seed : randomSeed(),
+      displayName(useSettings.getState().playerName),
+    );
+    if (__DEV__ && id === 'arena' && stress) arenaDev?.stressLegacy(s as ArenaState);
+    return s;
+  }, [id, seed, stress]);
   const [state, setState] = useState<AnyMotion>(fresh);
   const [earned, setEarned] = useState(0);
   const current = useRef(state);
@@ -280,6 +315,7 @@ function MotionGame({ meta }: { meta: MotionMeta }) {
             )}
           </View>
         </View>
+        {__DEV__ && id === 'arena' && LegacyProfile && <LegacyProfile running={running} seed={seed ?? state.seed} />}
         {!running && (
           <SessionOverlay
             title={state.phase === 'paused' ? 'Paused' : state.phase === 'over' ? 'Round complete' : meta.name}

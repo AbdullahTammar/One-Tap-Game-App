@@ -8,6 +8,11 @@ import { useProgress } from './progress';
 import { persistStorage } from './storage';
 
 type Counters = Omit<PlayStats, 'best' | 'skinsOwned'>;
+export interface ArenaAward {
+  coins: number;
+  total: number;
+  unlocked: string[];
+}
 export interface GameReport {
   id: string;
   score: number;
@@ -19,6 +24,8 @@ export interface GameReport {
   linked?: number;
 }
 interface AchievementState {
+  arenaOutcomes: Record<string, ArenaAward>;
+  applyArenaReport: (key: string, r: GameReport) => ArenaAward;
   counters: Counters;
   lastDay: string | null;
   unlocked: Record<string, number>;
@@ -68,6 +75,41 @@ export const useAchievements = create<AchievementState>()(
         return fresh;
       };
       return {
+        arenaOutcomes: {},
+        applyArenaReport: (key, r) => {
+          const old = get().arenaOutcomes[key];
+          if (old) {
+            set({ arenaOutcomes: { ...get().arenaOutcomes } });
+            return old;
+          }
+          const c = get().counters,
+            today = dayKey();
+          const counters: Counters = {
+            ...c,
+            plays: c.plays + 1,
+            playedBy: { ...c.playedBy, arena: (c.playedBy.arena ?? 0) + 1 },
+            arenaKills: c.arenaKills + (r.arenaKills ?? 0),
+            arenaWins: c.arenaWins + (r.arenaWin ? 1 : 0),
+            days: c.days + (get().lastDay === today ? 0 : 1),
+          };
+          const stats = playerStats(currentStats(counters));
+          const fresh = PLAYER_ACHIEVEMENTS.filter((a) => !get().unlocked[a.id] && a.progress(stats) >= a.goal);
+          const now = Date.now(),
+            coins = coinsFor('arena', r.score);
+          const award = {
+            coins,
+            total: coins + fresh.reduce((n, a) => n + a.reward, 0),
+            unlocked: fresh.map((a) => a.id),
+          };
+          set({
+            counters,
+            lastDay: today,
+            unlocked: { ...get().unlocked, ...Object.fromEntries(fresh.map((a) => [a.id, now])) },
+            toasts: [...get().toasts, ...fresh],
+            arenaOutcomes: { ...get().arenaOutcomes, [key]: award },
+          });
+          return award;
+        },
         counters: EMPTY,
         lastDay: null,
         unlocked: {},
@@ -107,7 +149,12 @@ export const useAchievements = create<AchievementState>()(
     {
       name: 'lumo.achievements',
       storage: persistStorage,
-      partialize: (s) => ({ counters: s.counters, lastDay: s.lastDay, unlocked: s.unlocked }),
+      partialize: (s) => ({
+        counters: s.counters,
+        lastDay: s.lastDay,
+        unlocked: s.unlocked,
+        arenaOutcomes: s.arenaOutcomes,
+      }),
       merge: (saved, current) => {
         const p = (saved ?? {}) as Partial<AchievementState>;
         return { ...current, ...p, counters: { ...EMPTY, ...(p.counters ?? {}) }, toasts: [] };

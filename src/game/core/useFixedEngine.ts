@@ -43,6 +43,8 @@ export function useFixedEngine<S>(
   input: SharedValue<InputState>,
   onEvent: (event: DiscreteEvent, session: number, sequence: number) => void,
   config: ClockConfig = DEFAULT_CLOCK,
+  initialSession = 1,
+  probeCapacity = 600,
 ) {
   validateClock(config);
   if (
@@ -54,8 +56,8 @@ export function useFixedEngine<S>(
   const { create, step, reset: resetState, maxEventsPerStep } = engine;
   const initialState = useMemo(() => create(), [create]);
   const initialClock = useMemo(() => createClock(), []);
-  const initialEvents = useMemo(() => createEventBus(), []);
-  const initialProbe = useMemo<Probe | null>(() => (DEV_MODE && devProbe ? devProbe.createProbe() : null), []);
+  const initialEvents = useMemo(() => createEventBus(256, initialSession), [initialSession]);
+  const initialProbe = useMemo<Probe | null>(() => (DEV_MODE && devProbe ? devProbe.createProbe(probeCapacity) : null), [probeCapacity]);
   const state = useSharedValue(initialState);
   const clock = useSharedValue(initialClock);
   const events = useSharedValue(initialEvents);

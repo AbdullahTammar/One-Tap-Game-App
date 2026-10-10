@@ -1,0 +1,1328 @@
+[
+  {
+    "name": "scripted",
+    "seed": 42,
+    "dt": 0.016666666666666666,
+    "checkpoints": [
+      {
+        "tick": 0,
+        "hash": "5dc8e8fe477f5b62fbb5f98dd3e3949a32382d7e59caa7553028721fc08487f9",
+        "score": 20,
+        "kills": 0,
+        "rank": 9,
+        "elapsed": 0.016666666666666666,
+        "seed": 270002724,
+        "nextId": 12
+      },
+      {
+        "tick": 300,
+        "hash": "9de3904753f48430cb54c66fe6fe9bd34b3080fcc153fc699973b4d75de899ca",
+        "score": 21,
+        "kills": 0,
+        "rank": 9,
+        "elapsed": 5.016666666666654,
+        "seed": -253348655,
+        "nextId": 12
+      },
+      {
+        "tick": 305,
+        "hash": "3086f5b830be717d8c27ded6c8ec452a9271ec2504f45fe026cda7a5b7ca5c8a",
+        "score": 21,
+        "kills": 0,
+        "rank": 11,
+        "elapsed": 5.099999999999987,
+        "seed": -253348655,
+        "nextId": 12
+      }
+    ]
+  },
+  {
+    "name": "powers",
+    "seed": 42,
+    "dt": 0.016666666666666666,
+    "checkpoints": [
+      {
+        "tick": 0,
+        "hash": "8eedb0d81900c86bca3e674481d5ce0a20a538995629ec654c2220bab3ac6385",
+        "score": 127,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 0.016666666666666666,
+        "seed": -1625504286,
+        "nextId": 12
+      },
+      {
+        "tick": 300,
+        "hash": "fb8c4f2da7b37312aec5359c773aa51faefd2638d0b3412ce72f75dddb8f6105",
+        "score": 141,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 5.016666666666654,
+        "seed": 867287691,
+        "nextId": 12
+      },
+      {
+        "tick": 600,
+        "hash": "631e0ab5ee38a63a8d5eb58579574c55f462cdf314a0805112fc18fce203456e",
+        "score": 141,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 10.016666666666744,
+        "seed": -551240446,
+        "nextId": 12
+      },
+      {
+        "tick": 900,
+        "hash": "daf61b49ad97cdda433c0681f6f9b3879acd68c7516d50fbb5d56a74f66ff1cd",
+        "score": 141,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 15.016666666666993,
+        "seed": -762462140,
+        "nextId": 12
+      },
+      {
+        "tick": 1200,
+        "hash": "eb2006b44b09af315a124105bac5e6c2de8ad2efa5ae6637724bd2c5c7d8264e",
+        "score": 141,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 20.01666666666681,
+        "seed": -1229448622,
+        "nextId": 12
+      },
+      {
+        "tick": 1500,
+        "hash": "46007926e814d66a81b9ac170fce334162c8381ab4121a0d34ecb3668c2c2e0d",
+        "score": 141,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 25.016666666666527,
+        "seed": 1391225749,
+        "nextId": 14
+      },
+      {
+        "tick": 1800,
+        "hash": "0bf69a0009b2442f06f398c6cb997b1409581573c64bf376e73858c6aaf924bb",
+        "score": 141,
+        "kills": 0,
+        "rank": 2,
+        "elapsed": 30.016666666666243,
+        "seed": -1163091334,
+        "nextId": 16
+      },
+      {
+        "tick": 2100,
+        "hash": "df3fe0da5805a95825040fda3a6e49700f09c2fc07d6267a9311cffab19acd58",
+        "score": 141,
+        "kills": 0,
+        "rank": 2,
+        "elapsed": 35.01666666666596,
+        "seed": 633923776,
+        "nextId": 17
+      },
+      {
+        "tick": 2400,
+        "hash": "ad0b732d5f13b5f22321b05853b2e085ceeb187d4e1c43e0a1531272ef842481",
+        "score": 141,
+        "kills": 0,
+        "rank": 4,
+        "elapsed": 40.01666666666568,
+        "seed": -976427952,
+        "nextId": 18
+      },
+      {
+        "tick": 2700,
+        "hash": "4b7277a02985f5560d70e12b6ccaecf3d010c80ae2a6906b9806521153e0d1ae",
+        "score": 141,
+        "kills": 0,
+        "rank": 4,
+        "elapsed": 45.016666666665394,
+        "seed": -1195225946,
+        "nextId": 18
+      },
+      {
+        "tick": 3000,
+        "hash": "37dbe77004be86d2fec2b6fdf7d255021c4a70867e62da7c4ad9d2a547fffca3",
+        "score": 141,
+        "kills": 0,
+        "rank": 6,
+        "elapsed": 50.01666666666511,
+        "seed": -733399673,
+        "nextId": 20
+      },
+      {
+        "tick": 3300,
+        "hash": "04e8790626565dc99c5b086dfb8d7fe6883f42ca809a8d9ea54360db6b17789c",
+        "score": 141,
+        "kills": 0,
+        "rank": 8,
+        "elapsed": 55.016666666664825,
+        "seed": 1894850998,
+        "nextId": 20
+      },
+      {
+        "tick": 3372,
+        "hash": "2fb52d4d687d37971a7003e310c1cfb32092343c17a1336f0871065025fd1636",
+        "score": 141,
+        "kills": 0,
+        "rank": 10,
+        "elapsed": 56.21666666666476,
+        "seed": -1159173858,
+        "nextId": 20
+      }
+    ]
+  },
+  {
+    "name": "kill-respawn",
+    "seed": 42,
+    "dt": 0.016666666666666666,
+    "checkpoints": [
+      {
+        "tick": 0,
+        "hash": "4a879b3929fc91a696a81631f55b3a40b624f145ca001ded488ab963b2bbd690",
+        "score": 110,
+        "kills": 1,
+        "rank": 1,
+        "elapsed": 0.016666666666666666,
+        "seed": 206061527,
+        "nextId": 12
+      },
+      {
+        "tick": 300,
+        "hash": "6e522fb2d4a040c37d4d48674c7ca9852cec0b684cfd14a138a436a7f280baa4",
+        "score": 110,
+        "kills": 1,
+        "rank": 1,
+        "elapsed": 5.016666666666654,
+        "seed": -204560058,
+        "nextId": 13
+      },
+      {
+        "tick": 600,
+        "hash": "6a71fa1de3a9c2474aac9244c5a494cb4a0554534d556f36a5533f33d2e8d8ee",
+        "score": 110,
+        "kills": 1,
+        "rank": 1,
+        "elapsed": 10.016666666666744,
+        "seed": 1656396249,
+        "nextId": 14
+      },
+      {
+        "tick": 900,
+        "hash": "4625fff395d7fddfd69cc9a7527b7c1b6877dde39415a659ea1472868644ab7d",
+        "score": 110,
+        "kills": 1,
+        "rank": 1,
+        "elapsed": 15.016666666666993,
+        "seed": -1706427495,
+        "nextId": 14
+      },
+      {
+        "tick": 1200,
+        "hash": "9ce268f6bf90c6b1c732a6b64d0fdcaff14baa7095a443504a894bcfcf6e1079",
+        "score": 110,
+        "kills": 1,
+        "rank": 2,
+        "elapsed": 20.01666666666681,
+        "seed": 2113977019,
+        "nextId": 15
+      },
+      {
+        "tick": 1500,
+        "hash": "4f4b2236255715df515c31262ee0d33a936f7e252715cde5c3b111263d9f561c",
+        "score": 110,
+        "kills": 1,
+        "rank": 2,
+        "elapsed": 25.016666666666527,
+        "seed": -2087658586,
+        "nextId": 15
+      },
+      {
+        "tick": 1641,
+        "hash": "53a20cab512d6d065dc1797c2ded42551c9f9b23370dca336d9be3c3367cc828",
+        "score": 110,
+        "kills": 1,
+        "rank": 3,
+        "elapsed": 27.366666666666394,
+        "seed": -365491770,
+        "nextId": 16
+      }
+    ]
+  },
+  {
+    "name": "match",
+    "seed": 42,
+    "dt": 0.016666666666666666,
+    "checkpoints": [
+      {
+        "tick": 0,
+        "hash": "461d04f402d9b343d583767f66c92edbb1d29781e7251610d2d4879c2126908c",
+        "score": 2017,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 0.016666666666666666,
+        "seed": 390308818,
+        "nextId": 12
+      },
+      {
+        "tick": 300,
+        "hash": "c468fbedcb0eaa6a3da04f9145610e60cb8c72afe818725310114bb45d692ac0",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 5.016666666666654,
+        "seed": 683040400,
+        "nextId": 12
+      },
+      {
+        "tick": 600,
+        "hash": "8700be118fb59c3f3cecebb08d9420e8fa744c394d8c97692a73c97e77f28664",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 10.016666666666744,
+        "seed": -2055523974,
+        "nextId": 12
+      },
+      {
+        "tick": 900,
+        "hash": "400d14431fdeb1b8570f34b74f0ccb6f175cf694928f53c61fb21b3567403aaa",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 15.016666666666993,
+        "seed": -378814958,
+        "nextId": 13
+      },
+      {
+        "tick": 1200,
+        "hash": "d1bf0690fb708b3762ff355e48fd57b12b3826e01f4c103090c13b50c3205d0b",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 20.01666666666681,
+        "seed": -526095455,
+        "nextId": 13
+      },
+      {
+        "tick": 1500,
+        "hash": "1874a060826e991fc36f11d84aedfd017fbfcba4afcb426aa3b959ec5081b722",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 25.016666666666527,
+        "seed": -1873106095,
+        "nextId": 13
+      },
+      {
+        "tick": 1800,
+        "hash": "11b6817305e19b69038aa81a19d5b2864a6cb58ea6a2d9a679d33569827b36ca",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 30.016666666666243,
+        "seed": 2082757113,
+        "nextId": 14
+      },
+      {
+        "tick": 2100,
+        "hash": "b8d01c45e328e84d845a3ea3063e62f6e8fb98b2274ab7e074730ce03730a748",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 35.01666666666596,
+        "seed": -1791596207,
+        "nextId": 14
+      },
+      {
+        "tick": 2400,
+        "hash": "a37e0532e25883ec4ff0dd91de048f41287ffef1abace0cb4d337f339ed0a6a2",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 40.01666666666568,
+        "seed": -490958073,
+        "nextId": 14
+      },
+      {
+        "tick": 2700,
+        "hash": "caf745e23e99769114accbc209971abe43c48974e486bd7033bbae0f7076a5ed",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 45.016666666665394,
+        "seed": 858468658,
+        "nextId": 16
+      },
+      {
+        "tick": 3000,
+        "hash": "2517cef9ec8d476be10a058b5ef1dd5de894bf4e3894b94f928ad7aadedb5b8d",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 50.01666666666511,
+        "seed": 703611861,
+        "nextId": 17
+      },
+      {
+        "tick": 3300,
+        "hash": "3a1f7296a252b0913371ad61e899ee17363d9df59918404e69983751309e166d",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 55.016666666664825,
+        "seed": -131869203,
+        "nextId": 17
+      },
+      {
+        "tick": 3600,
+        "hash": "b08b754656dc24f6d0e7ced8c08e58c4872769e7dc0bb80f8d32d309207c84e2",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 60.01666666666454,
+        "seed": -1478879843,
+        "nextId": 17
+      },
+      {
+        "tick": 3900,
+        "hash": "41712d021d51a0ca0031c5993b9b03694e6c4a5286727c5634af7c53ba834d2f",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 65.01666666666426,
+        "seed": -2081325019,
+        "nextId": 21
+      },
+      {
+        "tick": 4200,
+        "hash": "c081e0e3c7422f0ec14f42bfd0fcff72adcc1862b9ddafe2260594a32b2a57d7",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 70.01666666666398,
+        "seed": -1156757767,
+        "nextId": 21
+      },
+      {
+        "tick": 4500,
+        "hash": "baea8f15d1ae7c4674de4c86464c91f02febf83b7d16401ba11c4395f1298e87",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 75.0166666666637,
+        "seed": -1616167949,
+        "nextId": 21
+      },
+      {
+        "tick": 4800,
+        "hash": "49420153db707922b31c54019096d7cafebd90197d149dc1a54a208212fc4ba5",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 80.01666666666341,
+        "seed": -1515259958,
+        "nextId": 21
+      },
+      {
+        "tick": 5100,
+        "hash": "a0db2cc56b39e789850dd7d09f61a7baedc01cbac56a8a42c08c5ca1fb162247",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 85.01666666666313,
+        "seed": -782516297,
+        "nextId": 22
+      },
+      {
+        "tick": 5400,
+        "hash": "b490644153d2daba761a4f977250a68222b710bed89a1e23d072e67eef450481",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 90.01666666666284,
+        "seed": 709945428,
+        "nextId": 23
+      },
+      {
+        "tick": 5700,
+        "hash": "8808ef9e90985f37698ec227adc4ed691419aa0d7c08ecb8620f883b1b3731a3",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 95.01666666666256,
+        "seed": 867218316,
+        "nextId": 25
+      },
+      {
+        "tick": 6000,
+        "hash": "79568133c20cdbdfc7522bf0990f9adccc119aebe6d03acae4a58bad29d6f1a8",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 100.01666666666227,
+        "seed": 776302716,
+        "nextId": 25
+      },
+      {
+        "tick": 6300,
+        "hash": "22151d657eb17b8311316ec0cca0fc68b5cf5ee78c1cd49a7f6654a94d8cb45d",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 105.01666666666199,
+        "seed": -2033779155,
+        "nextId": 27
+      },
+      {
+        "tick": 6600,
+        "hash": "b60b4f4eb6960b41a3bfc67d54797130d751bb5c15987f91026dad5c08fc9828",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 110.0166666666617,
+        "seed": 1034483595,
+        "nextId": 27
+      },
+      {
+        "tick": 6900,
+        "hash": "31659f8cfd43647567a8d8fa0595626c25fdc11916f4cdec701ecdeddd87a149",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 115.01666666666142,
+        "seed": -1847115773,
+        "nextId": 28
+      },
+      {
+        "tick": 7200,
+        "hash": "a1084fd7f8da989b0ebfc61eb769b961327c0ee841ae7d867319169705d0a746",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 120.01666666666114,
+        "seed": -1050430915,
+        "nextId": 29
+      },
+      {
+        "tick": 7500,
+        "hash": "1d31c4fea6435053a2772d9c557b7a8352db4e55f4576bcc8e47ae9474184f94",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 125.01666666666085,
+        "seed": -1084981618,
+        "nextId": 29
+      },
+      {
+        "tick": 7800,
+        "hash": "2550893a70d631f08b98751e42965ae3c6f4115fdb76f6cb1d974f84ff784971",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 130.01666666666227,
+        "seed": 1287504265,
+        "nextId": 29
+      },
+      {
+        "tick": 8100,
+        "hash": "0e84ef4b188f4ffb6ceb4748e9626795c42f870834830cc46c45c88edb666863",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 135.01666666666625,
+        "seed": -762859542,
+        "nextId": 31
+      },
+      {
+        "tick": 8400,
+        "hash": "b45bba82dd03fcd654d4557d6bc76380218d18cfb646351fd9ca7ae454d25526",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 140.01666666667023,
+        "seed": 1665991238,
+        "nextId": 31
+      },
+      {
+        "tick": 8700,
+        "hash": "52eae3f9c69ce6612adbad8c40f95eccf96d51d53e9bd2c91e4cca64f75c3b0e",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 145.0166666666742,
+        "seed": 1766899229,
+        "nextId": 32
+      },
+      {
+        "tick": 9000,
+        "hash": "4556c85332cd6573a6821b051e1f67345079aff981ef0891c3b085c9d53e7780",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 150.0166666666782,
+        "seed": -1171065036,
+        "nextId": 32
+      },
+      {
+        "tick": 9300,
+        "hash": "c035866e966aa18b07e169e0ffe5fe70f5ebc4cc90cb17d56507204092c4a6f7",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 155.01666666668217,
+        "seed": 121996798,
+        "nextId": 32
+      },
+      {
+        "tick": 9600,
+        "hash": "846117fea1e793a7ce316012d0c61b4e6c9ee3503956ea9d4733d6be366dcf58",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 160.01666666668615,
+        "seed": -1920790709,
+        "nextId": 32
+      },
+      {
+        "tick": 9900,
+        "hash": "d8b9de5c0010cf7da5ced133dbf73a10f22f0e37de81b5f38e67e6c210c38c4d",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 165.01666666669013,
+        "seed": 643518765,
+        "nextId": 32
+      },
+      {
+        "tick": 10200,
+        "hash": "7999215cc4bf6ad01d00020255a6c5397737b9b8d6be72ec010ad4499624aee0",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 170.0166666666941,
+        "seed": 2072039293,
+        "nextId": 32
+      },
+      {
+        "tick": 10500,
+        "hash": "ba1fa78757ef87114958b2b03ac33066ea86be859fdbd17b372f9849c3aaca0f",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 175.0166666666981,
+        "seed": 269863974,
+        "nextId": 32
+      },
+      {
+        "tick": 10799,
+        "hash": "888a196b51cdf9b4162c335d9e4aa738ac7e6bcbfa851b462263af0d400791d3",
+        "score": 2145,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 180.00000000003539,
+        "seed": 498654359,
+        "nextId": 32
+      }
+    ]
+  },
+  {
+    "name": "scripted",
+    "seed": 42,
+    "dt": 0.008333333333333333,
+    "checkpoints": [
+      {
+        "tick": 0,
+        "hash": "6e32e224358720fd1f797b46c748ad9fc61236e62a6ebd3211c4d26cbcacdc56",
+        "score": 20,
+        "kills": 0,
+        "rank": 9,
+        "elapsed": 0.008333333333333333,
+        "seed": 270002724,
+        "nextId": 12
+      },
+      {
+        "tick": 498,
+        "hash": "3b7894461c1a49ae699bbc633e634d082a117697ba27af856959043f2cfa7d54",
+        "score": 20,
+        "kills": 0,
+        "rank": 11,
+        "elapsed": 4.15833333333333,
+        "seed": 457580812,
+        "nextId": 12
+      }
+    ]
+  },
+  {
+    "name": "powers",
+    "seed": 42,
+    "dt": 0.008333333333333333,
+    "checkpoints": [
+      {
+        "tick": 0,
+        "hash": "7b0512a4bdde8f147cfec66f2b480b0f6738fcf1a67cdff88bf47ca7b69c145c",
+        "score": 127,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 0.008333333333333333,
+        "seed": -1625504286,
+        "nextId": 12
+      },
+      {
+        "tick": 600,
+        "hash": "187dabf0b6c1c776938329733a1f4a2e0c4572af1f5f0d426651d9cbe5d92d41",
+        "score": 142,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 5.008333333333372,
+        "seed": 171510824,
+        "nextId": 12
+      },
+      {
+        "tick": 1200,
+        "hash": "f572470017219c7f5b888fdeef07dbd932098bf0fb67edf8641d49262d8f4b09",
+        "score": 142,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 10.008333333333406,
+        "seed": -1814911786,
+        "nextId": 12
+      },
+      {
+        "tick": 1800,
+        "hash": "59f80532ed1000a5d7dccf1b8659cb74933275f566e92b041cd75f7fb5788991",
+        "score": 142,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 15.008333333333121,
+        "seed": -1928556286,
+        "nextId": 13
+      },
+      {
+        "tick": 2400,
+        "hash": "99bf1578037d9895e91297781c68fef2e2e1de3926bc57471f3fd027a0050bdc",
+        "score": 142,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 20.00833333333284,
+        "seed": 1835483331,
+        "nextId": 13
+      },
+      {
+        "tick": 3000,
+        "hash": "3a718e32215f309bfdcdb97d70b2b8a6615a110c83a94da86e01d950c2d54dd8",
+        "score": 142,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 25.008333333332555,
+        "seed": 240284203,
+        "nextId": 13
+      },
+      {
+        "tick": 3600,
+        "hash": "7d780dac481d2e63b8c5091b68842b9b5d95653ccad214b6a2db88a6ad6f35d2",
+        "score": 142,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 30.00833333333227,
+        "seed": -730655555,
+        "nextId": 13
+      },
+      {
+        "tick": 4200,
+        "hash": "1e5d77c7b16b16e95d4213925c7e6666ee30431e424a8697ede848ec03be0740",
+        "score": 142,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 35.00833333333199,
+        "seed": -2013724998,
+        "nextId": 13
+      },
+      {
+        "tick": 4800,
+        "hash": "6d40e3116949143569d0a41a400656c1e4fb0969f88f5771aa31ccb6d41d33f1",
+        "score": 142,
+        "kills": 0,
+        "rank": 2,
+        "elapsed": 40.008333333331706,
+        "seed": 1471820931,
+        "nextId": 13
+      },
+      {
+        "tick": 5400,
+        "hash": "f0ee11aa293330ce50479a129f61812f21dff31e826aeb46ea2aaead683bd203",
+        "score": 142,
+        "kills": 1,
+        "rank": 2,
+        "elapsed": 45.00833333333142,
+        "seed": 1591212319,
+        "nextId": 17
+      },
+      {
+        "tick": 6000,
+        "hash": "14f4bda8aa76e0159376d849f04e1b502fc7bce781989b47e1ea9a1efda1fef4",
+        "score": 142,
+        "kills": 1,
+        "rank": 2,
+        "elapsed": 50.00833333333114,
+        "seed": 2068191192,
+        "nextId": 17
+      },
+      {
+        "tick": 6600,
+        "hash": "99644de1140a1532ca768ef8b1a6eb170a37f295f6fc80f634b104c24b95a805",
+        "score": 142,
+        "kills": 1,
+        "rank": 4,
+        "elapsed": 55.00833333333085,
+        "seed": 209650976,
+        "nextId": 17
+      },
+      {
+        "tick": 7200,
+        "hash": "3a34b00b678159a139dfd9b7ead289aaa6895a3fdfff9b9b8de66a8ecd4cd245",
+        "score": 142,
+        "kills": 1,
+        "rank": 7,
+        "elapsed": 60.00833333333057,
+        "seed": 814512243,
+        "nextId": 17
+      },
+      {
+        "tick": 7208,
+        "hash": "c4d527fc9b363e005d146439fe81a58cefe8c9919a0fa25269a7b8db4d53f256",
+        "score": 142,
+        "kills": 1,
+        "rank": 8,
+        "elapsed": 60.07499999999723,
+        "seed": -1712830437,
+        "nextId": 17
+      }
+    ]
+  },
+  {
+    "name": "kill-respawn",
+    "seed": 42,
+    "dt": 0.008333333333333333,
+    "checkpoints": [
+      {
+        "tick": 0,
+        "hash": "4cf6d20458db4c041426bec3ef3f62583f7a2c32d5d651d5570f55adbf941918",
+        "score": 110,
+        "kills": 1,
+        "rank": 1,
+        "elapsed": 0.008333333333333333,
+        "seed": 206061527,
+        "nextId": 12
+      },
+      {
+        "tick": 600,
+        "hash": "135d1152e46840646e06389f9b9391ea3f6930f2171b948d01533c890a088f63",
+        "score": 110,
+        "kills": 1,
+        "rank": 1,
+        "elapsed": 5.008333333333372,
+        "seed": -1588537492,
+        "nextId": 13
+      },
+      {
+        "tick": 1200,
+        "hash": "0d166866f54cc8b9347d7d0a9610520043776b8df968c82fe61e0ec661ff81c6",
+        "score": 110,
+        "kills": 1,
+        "rank": 1,
+        "elapsed": 10.008333333333406,
+        "seed": 1487301558,
+        "nextId": 13
+      },
+      {
+        "tick": 1800,
+        "hash": "c3fbc605d6b22afa1db4b31572df0c911a704957ee5d0826f3bde0916b56cb02",
+        "score": 110,
+        "kills": 1,
+        "rank": 1,
+        "elapsed": 15.008333333333121,
+        "seed": -931556831,
+        "nextId": 13
+      },
+      {
+        "tick": 2400,
+        "hash": "e9b09f9002876116ebb11b65d8df5340c929e22180d87b3d84efd717b13b6e92",
+        "score": 110,
+        "kills": 1,
+        "rank": 1,
+        "elapsed": 20.00833333333284,
+        "seed": -447001658,
+        "nextId": 13
+      },
+      {
+        "tick": 3000,
+        "hash": "73df294a3a09fe5b4e5b9860da970a6b9471c71869675a376c68f327aa12a196",
+        "score": 110,
+        "kills": 1,
+        "rank": 1,
+        "elapsed": 25.008333333332555,
+        "seed": -1481882613,
+        "nextId": 13
+      },
+      {
+        "tick": 3600,
+        "hash": "64f15908d024a515de29ee55f16c3129b1a19f71673893b5f8c95b286c624592",
+        "score": 110,
+        "kills": 1,
+        "rank": 1,
+        "elapsed": 30.00833333333227,
+        "seed": -948538843,
+        "nextId": 15
+      },
+      {
+        "tick": 4200,
+        "hash": "e2022878238f79f94bfd39a93e39ea908c8ab24f7fe3d3168d8c21efdcf15274",
+        "score": 110,
+        "kills": 1,
+        "rank": 6,
+        "elapsed": 35.00833333333199,
+        "seed": 265429194,
+        "nextId": 15
+      },
+      {
+        "tick": 4800,
+        "hash": "a8453cadac6e36500dd22db925da228be5591dbe2a8a5d77a03a3378868d48d7",
+        "score": 110,
+        "kills": 1,
+        "rank": 9,
+        "elapsed": 40.008333333331706,
+        "seed": 1640915622,
+        "nextId": 16
+      },
+      {
+        "tick": 5400,
+        "hash": "10d4d75e2606bbac672a7f12bd18f02525292ac96ddf653aaee985bd623fa2af",
+        "score": 110,
+        "kills": 1,
+        "rank": 11,
+        "elapsed": 45.00833333333142,
+        "seed": 1109987943,
+        "nextId": 16
+      },
+      {
+        "tick": 6000,
+        "hash": "9f8abb138a8dd5985c71cc65e9ff26085a585e7ad0525194d3eff0edec8c4000",
+        "score": 110,
+        "kills": 1,
+        "rank": 12,
+        "elapsed": 50.00833333333114,
+        "seed": -2012223613,
+        "nextId": 16
+      },
+      {
+        "tick": 6600,
+        "hash": "ab56ea24df3465ee07449ddfb861b1f88de48be71ea3b1376c9b518df4cd36f2",
+        "score": 110,
+        "kills": 1,
+        "rank": 12,
+        "elapsed": 55.00833333333085,
+        "seed": 1247862728,
+        "nextId": 16
+      },
+      {
+        "tick": 7200,
+        "hash": "a189cb4b97a8fe0ebd4d1a3d262c0bb9ba53eee09499e5957314864b43a4ae71",
+        "score": 110,
+        "kills": 1,
+        "rank": 12,
+        "elapsed": 60.00833333333057,
+        "seed": -434006497,
+        "nextId": 17
+      },
+      {
+        "tick": 7793,
+        "hash": "04f6eb2c96bf6042883147da9d5b58a6d290923509833cae54005c263de49a02",
+        "score": 110,
+        "kills": 1,
+        "rank": 12,
+        "elapsed": 64.94999999999776,
+        "seed": 1994844283,
+        "nextId": 18
+      }
+    ]
+  },
+  {
+    "name": "match",
+    "seed": 42,
+    "dt": 0.008333333333333333,
+    "checkpoints": [
+      {
+        "tick": 0,
+        "hash": "2a0ed0d79e3097dbd962e6534e6d3316d44e074c04714d178b3d1335444cb409",
+        "score": 2017,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 0.008333333333333333,
+        "seed": 390308818,
+        "nextId": 12
+      },
+      {
+        "tick": 600,
+        "hash": "c23547bfd008638d9fab8fb65be5a201b64b2dd3b52d3ff7c2cb3f0d9b073a88",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 5.008333333333372,
+        "seed": 1634582055,
+        "nextId": 12
+      },
+      {
+        "tick": 1200,
+        "hash": "af47bfafaaef215114d34c1843ef38f40d61c3553426d69f0f0cb4fa9315ae70",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 10.008333333333406,
+        "seed": -39710870,
+        "nextId": 12
+      },
+      {
+        "tick": 1800,
+        "hash": "4a0de110f5f37de8d62cf46c06a7d23091f8a02e3b8333418ee56a49773e8b79",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 15.008333333333121,
+        "seed": -194567667,
+        "nextId": 13
+      },
+      {
+        "tick": 2400,
+        "hash": "58a744eef2ba8fb3e4b2596c34f1c6cd53981532aecf49ebe63f3937e310d267",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 20.00833333333284,
+        "seed": 1610023743,
+        "nextId": 13
+      },
+      {
+        "tick": 3000,
+        "hash": "668296c89d4d10a02933e2951b56ef723e09da673967f47f7be8d54ac0c8403f",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 25.008333333332555,
+        "seed": -2008564789,
+        "nextId": 14
+      },
+      {
+        "tick": 3600,
+        "hash": "d563827993ca04f50d1df5ec4a65e23f1e2adb24ded9c953a9f90dddc753bc3e",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 30.00833333333227,
+        "seed": -267914576,
+        "nextId": 14
+      },
+      {
+        "tick": 4200,
+        "hash": "1cbfc8a93c582881831ed8b0c57f81f1bbdb109e3307f9c98037f913c9e5e196",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 35.00833333333199,
+        "seed": -1389465628,
+        "nextId": 14
+      },
+      {
+        "tick": 4800,
+        "hash": "f64b2809e582bf80b03cb479f2328ff4210f1767b72afc97dd64e419559e28cb",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 40.008333333331706,
+        "seed": -1807663513,
+        "nextId": 16
+      },
+      {
+        "tick": 5400,
+        "hash": "8dcf8ae35551f1982e1c0e4aa08e2c7af4d812213b32df55cee84b2134e8b8bc",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 45.00833333333142,
+        "seed": -1522508231,
+        "nextId": 16
+      },
+      {
+        "tick": 6000,
+        "hash": "45f3334785cb3182a7bf6f33dc398c780d81fd1f65dcdc06f270d75cf7edc3b6",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 50.00833333333114,
+        "seed": 1722425510,
+        "nextId": 16
+      },
+      {
+        "tick": 6600,
+        "hash": "bc7c682aa6409ef88b96012ed6b6680d5719cbee4bb12bd92ea6ae6314cec3fb",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 55.00833333333085,
+        "seed": 337533370,
+        "nextId": 17
+      },
+      {
+        "tick": 7200,
+        "hash": "3ae0346daa4b43cd3770491d68e3104d2180c47842400dac403c6fbcfa8fbd1d",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 60.00833333333057,
+        "seed": 1878783692,
+        "nextId": 17
+      },
+      {
+        "tick": 7800,
+        "hash": "52652d5c4e648b5fd7aea5e89024546ec71ff708effa80e32b4e933f70808d13",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 65.00833333333114,
+        "seed": 1219973619,
+        "nextId": 17
+      },
+      {
+        "tick": 8400,
+        "hash": "594b33434e18a95d44f8e7e50d7aaf3a945ef0893032e7c6a124c9265c2ece15",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 70.00833333333512,
+        "seed": -1654049449,
+        "nextId": 17
+      },
+      {
+        "tick": 9000,
+        "hash": "9c4aa755087c1777243c21ec7570017dec1a8b5182ee4750397f44f7e255cb6f",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 75.0083333333391,
+        "seed": -1808906246,
+        "nextId": 17
+      },
+      {
+        "tick": 9600,
+        "hash": "efcc6f30aad6e4a1450cee93f7c3e4fe2cb336c338b1d01afb7e8b60c9a1f243",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 80.00833333334307,
+        "seed": -1147680082,
+        "nextId": 17
+      },
+      {
+        "tick": 10200,
+        "hash": "a5ae4aca4427636d138c01e9a60e3c46234208c2e7f7733c0ea7960c6809a8b3",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 85.00833333334705,
+        "seed": -1302536879,
+        "nextId": 17
+      },
+      {
+        "tick": 10800,
+        "hash": "8c3bc918b1effcfdf49308558b78562e1389dbc9a8fff83b57b9f59bbe458615",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 90.00833333335103,
+        "seed": 125983649,
+        "nextId": 17
+      },
+      {
+        "tick": 11400,
+        "hash": "575f944cfe66bd83258f120d27d83a86a6b7c4439764a73af24efebcb8456086",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 95.00833333335501,
+        "seed": 1490562980,
+        "nextId": 17
+      },
+      {
+        "tick": 12000,
+        "hash": "fd4b546308f7c565fff844e0d6a634b73c6fa0fa3076bd4dd8f74b0a40e75f13",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 100.00833333335899,
+        "seed": -807989315,
+        "nextId": 17
+      },
+      {
+        "tick": 12600,
+        "hash": "c698f97c2c3e15f17e2b2c33a1d188a7129a1fc5a7843d79b79cf191f3033fb0",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 105.00833333336297,
+        "seed": 1556920268,
+        "nextId": 17
+      },
+      {
+        "tick": 13200,
+        "hash": "8d9e9ccec0b159ba6628c27f38ab24b0737a41d4f23dd49f21020b74fa4b6300",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 110.00833333336695,
+        "seed": -267983951,
+        "nextId": 18
+      },
+      {
+        "tick": 13800,
+        "hash": "e59e78905e3dc8ad26aad0b81e10215a8556d8d887fa681e9bd31a6c73baafba",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 115.00833333337093,
+        "seed": 1137807677,
+        "nextId": 19
+      },
+      {
+        "tick": 14400,
+        "hash": "439c1cbaca6aba69d8da645ff3286490e1995d81e64709b3868205cbaaf858a6",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 120.0083333333749,
+        "seed": -1672274194,
+        "nextId": 19
+      },
+      {
+        "tick": 15000,
+        "hash": "73020fc307361164c26cb4f72e95de713dde60bfec09d04587eb3aa0288e3a01",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 125.00833333337889,
+        "seed": -315271163,
+        "nextId": 19
+      },
+      {
+        "tick": 15600,
+        "hash": "44c6bf6a7e125cc478fa1e700b2c80c698dcae5fce8e9606c8b615ff53c7165c",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 130.00833333337943,
+        "seed": -718316448,
+        "nextId": 19
+      },
+      {
+        "tick": 16200,
+        "hash": "5194308a095d5eb8c01783a3042edd74c2f2d9f1a7aea5ebf73e1b1a1982e0f1",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 135.00833333337488,
+        "seed": -624984757,
+        "nextId": 21
+      },
+      {
+        "tick": 16800,
+        "hash": "9fc4d1a6d0da1bfa008a919e99584fcc38059da91f7c3fc8ddb2100fed7e9ee3",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 140.00833333337033,
+        "seed": -956512545,
+        "nextId": 21
+      },
+      {
+        "tick": 17400,
+        "hash": "76e07038ddcdda151963e3175346f0d0efb6b9faa62ae24d8d4da87e74157f57",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 145.00833333336578,
+        "seed": 2032656408,
+        "nextId": 21
+      },
+      {
+        "tick": 18000,
+        "hash": "cb85b9fc5c205162d185923f8892ba1364bfae57496e07e6a326413489589e50",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 150.00833333336124,
+        "seed": -1913214409,
+        "nextId": 22
+      },
+      {
+        "tick": 18600,
+        "hash": "4a32b49948b6efcf771c74b2ee8b66e638264e5235272f81333c880f652d5958",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 155.0083333333567,
+        "seed": 658671365,
+        "nextId": 22
+      },
+      {
+        "tick": 19200,
+        "hash": "db39ec423931241504bb4f66364981a7695dd82821fb4c4d8b8abfcb669a849a",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 160.00833333335214,
+        "seed": -816221669,
+        "nextId": 22
+      },
+      {
+        "tick": 19800,
+        "hash": "f824c12969d9936e62a7841d6f5b6d8a881fbbcb93e5ef35d22cf5ae141b2fdf",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 165.0083333333476,
+        "seed": 1428381820,
+        "nextId": 22
+      },
+      {
+        "tick": 20400,
+        "hash": "d94e74dbf0eaa332166da0dfe536215e2f2b6f008321ed0e02b0faa49e7022a3",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 170.00833333334305,
+        "seed": 1593231008,
+        "nextId": 22
+      },
+      {
+        "tick": 21000,
+        "hash": "7779c29cfa4590c05272bce4c9a9cbe2f4adce265da04fa8929f6825e4590b60",
+        "score": 2020,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 175.0083333333385,
+        "seed": 655927247,
+        "nextId": 24
+      },
+      {
+        "tick": 21599,
+        "hash": "c6745fb2251edc2d5cb5ea44feeb3a5a662cd640be215bf15a230c1fd5dfc7f8",
+        "score": 2145,
+        "kills": 0,
+        "rank": 1,
+        "elapsed": 180.00000000000063,
+        "seed": 1644435696,
+        "nextId": 24
+      }
+    ]
+  }
+]

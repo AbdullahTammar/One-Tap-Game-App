@@ -24,11 +24,11 @@ export interface EventBus {
   best: number;
   achievements: Uint8Array;
 }
-export function createEventBus(capacity = 256): EventBus {
+export function createEventBus(capacity = 256, session = 1): EventBus {
   return {
     journal: createRing(capacity, EVENT_STRIDE),
     sequence: 0,
-    session: 1,
+    session,
     terminal: false,
     inFlight: 0,
     retry: false,

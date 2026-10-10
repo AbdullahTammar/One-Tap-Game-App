@@ -21,6 +21,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AchievementToast } from '../components/AchievementToast';
+import { ArenaSaveStatus } from '../components/ArenaSaveStatus';
+import { drainArenaOutbox } from '../services/arenaPersistence';
 import { initAds } from '../services/ads';
 import { initFeedback } from '../services/feedback';
 import { initPurchases } from '../services/purchases';
@@ -52,10 +54,14 @@ export default function RootLayout() {
     useProgress.getState().refreshDay();
     initFeedback();
     initPurchases();
+    drainArenaOutbox();
     // Consent / ads after first paint so the UMP form never blocks the splash.
     const t = setTimeout(initAds, 600);
     const sub = AppState.addEventListener('change', (s) => {
-      if (s === 'active') useProgress.getState().refreshDay();
+      if (s === 'active') {
+        useProgress.getState().refreshDay();
+        drainArenaOutbox();
+      }
     });
     return () => {
       clearTimeout(t);
@@ -85,6 +91,7 @@ export default function RootLayout() {
           <Stack.Screen name="achievements" options={{ animation: 'slide_from_right' }} />
         </Stack>
         <AchievementToast />
+        <ArenaSaveStatus />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

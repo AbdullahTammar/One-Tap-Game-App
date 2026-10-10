@@ -14,6 +14,9 @@ import { createMotion, type AnyMotion, type MotionId } from '../game/motion';
 import { SWIPE_COLORS, visibleColor, type SwipeState } from '../game/motion/swipe';
 import { colors, fonts } from '../theme';
 import { SkinDot } from './SkinDot';
+const useRenderCounter = __DEV__
+  ? (require('../game/arena/dev/metrics') as typeof import('../game/arena/dev/metrics')).useArenaRenderCounter
+  : () => {};
 
 const DeferredView =
   process.env.EXPO_PUBLIC_ENABLE_DEFERRED_GAMES === '1' ||
@@ -48,6 +51,7 @@ export const MotionArt = memo(function MotionArt({
   orbStroke = colors.white,
   orbEmoji,
 }: Props) {
+  useRenderCounter(id === 'arena' ? 'LegacyArenaArt' : 'LegacyMotionArt');
   const s = state ?? createMotion(id, 7);
   const o = { orbFill, orbStroke, orbEmoji, color };
   const fieldHeight = id === 'arena' ? (320 * height) / size : 320;

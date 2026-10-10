@@ -34,6 +34,7 @@ export const initialProgress: ProgressData = {
 };
 
 interface ProgressActions {
+  applyArenaAward: (key: string, amount: number) => void;
   recordRun: (run: RunInput) => RunOutcome;
   amendRun: (original: Parameters<typeof amendRun>[1], run: RunInput) => RunOutcome;
   /** Grants the coin difference when a finished run is upgraded to "doubled". */
@@ -48,6 +49,14 @@ export const useProgress = create<ProgressData & ProgressActions>()(
   persist(
     (set, get) => ({
       ...initialProgress,
+      applyArenaAward: (key, amount) => {
+        const p = get();
+        set({
+          coins: p.coins + (p.arenaReceipts?.[key] ? 0 : Math.max(0, Math.floor(amount))),
+          arenaReceipts: { ...p.arenaReceipts, [key]: true },
+        });
+        // Re-publish even on replay: an earlier persistence write may have thrown after zustand changed.
+      },
       recordRun: (run) => {
         const { next, outcome } = applyRun(get(), run);
         set(next);
@@ -85,6 +94,7 @@ export const useProgress = create<ProgressData & ProgressActions>()(
       partialize: (s): ProgressData => {
         const data = {} as Record<string, unknown>;
         for (const key of Object.keys(initialProgress) as (keyof ProgressData)[]) data[key] = s[key];
+        if (s.arenaReceipts) data.arenaReceipts = s.arenaReceipts;
         return data as unknown as ProgressData;
       },
     },
