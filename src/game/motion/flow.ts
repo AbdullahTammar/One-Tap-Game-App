@@ -7,6 +7,9 @@ export interface FlowState extends MotionBase {
   path: number[];
   loop: boolean;
   timeLeft: number;
+  burst: number[];
+  burstColor: number;
+  burstLeft: number;
 }
 export function cellCenter(i: number) {
   return { x: (i % FLOW.size) * FLOW.cell + FLOW.cell / 2, y: Math.floor(i / FLOW.size) * FLOW.cell + FLOW.cell / 2 };
@@ -24,7 +27,16 @@ const adjacent = (a: number, b: number) =>
   Math.abs((a % FLOW.size) - (b % FLOW.size)) + Math.abs(Math.floor(a / FLOW.size) - Math.floor(b / FLOW.size)) === 1;
 
 export function createFlow(seed: number): FlowState {
-  const s: FlowState = { ...base(seed), grid: [], path: [], loop: false, timeLeft: FLOW.time };
+  const s: FlowState = {
+    ...base(seed),
+    grid: [],
+    path: [],
+    loop: false,
+    timeLeft: FLOW.time,
+    burst: [],
+    burstColor: 0,
+    burstLeft: 0,
+  };
   s.grid = Array.from({ length: FLOW.size * FLOW.size }, () => Math.floor(rand(s) * FLOW.colors));
   return s;
 }
@@ -32,7 +44,10 @@ export function stepFlow(state: FlowState, rawDt: number): FlowState {
   const dt = validDt(rawDt);
   if (state.phase !== 'running' || !dt) return state;
   const timeLeft = state.timeLeft - dt;
-  return timeLeft <= 0 ? { ...state, timeLeft: 0, phase: 'over', path: [], note: "Time's up" } : { ...state, timeLeft };
+  const burstLeft = Math.max(0, state.burstLeft - dt);
+  return timeLeft <= 0
+    ? { ...state, timeLeft: 0, phase: 'over', path: [], burst: [], burstLeft: 0, note: "Time's up" }
+    : { ...state, timeLeft, burstLeft, burst: burstLeft > 0 ? state.burst : [] };
 }
 /** Removes cleared cells, drops the dots above them, and refills from the top. */
 export function collapse(s: FlowState, clear: Set<number>) {
@@ -52,6 +67,9 @@ export function inputFlow(state: FlowState, ev: MotionInput): FlowState {
     const s: FlowState = { ...state, path: [], loop: false, perfect: state.loop };
     const color = state.grid[state.path[0]];
     const clear = new Set(state.loop ? state.grid.flatMap((c, i) => (c === color ? [i] : [])) : state.path);
+    s.burst = Array.from(clear);
+    s.burstColor = color;
+    s.burstLeft = 0.4;
     s.score += clear.size;
     // Long chains buy time: the clock is the real opponent.
     const bonus = state.loop ? 3 : state.path.length >= 4 ? 1 : 0;

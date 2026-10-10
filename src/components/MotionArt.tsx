@@ -14,6 +14,7 @@ import { createMotion, type AnyMotion, type MotionId } from '../game/motion';
 import { SWIPE_COLORS, visibleColor, type SwipeState } from '../game/motion/swipe';
 import { colors, fonts } from '../theme';
 import { SkinDot } from './SkinDot';
+import { paintCamera } from '../game/motion/viewport';
 const useRenderCounter = __DEV__
   ? (require('../game/arena/dev/metrics') as typeof import('../game/arena/dev/metrics')).useArenaRenderCounter
   : () => {};
@@ -54,7 +55,7 @@ export const MotionArt = memo(function MotionArt({
   useRenderCounter(id === 'arena' ? 'LegacyArenaArt' : 'LegacyMotionArt');
   const s = state ?? createMotion(id, 7);
   const o = { orbFill, orbStroke, orbEmoji, color };
-  const fieldHeight = id === 'arena' ? (320 * height) / size : 320;
+  const fieldHeight = id === 'arena' || id === 'paint' || id === 'flow' ? (320 * height) / size : 320;
   return (
     <Svg width={size} height={height} viewBox={`0 0 320 ${fieldHeight}`}>
       <Rect
@@ -78,13 +79,13 @@ export const MotionArt = memo(function MotionArt({
       ) : id === 'chain' ? (
         <DeferredView id="chain" s={s as ChainState} {...o} />
       ) : id === 'flow' ? (
-        <FlowView s={s as FlowState} {...o} />
+        <FlowView s={s as FlowState} fieldHeight={fieldHeight} {...o} />
       ) : id === 'stack' ? (
         <StackView s={s as StackState} {...o} />
       ) : id === 'duel' ? (
         <DeferredView id="duel" s={s as DuelState} {...o} />
       ) : id === 'paint' ? (
-        <PaintView s={s as PaintState} {...o} />
+        <PaintView s={s as PaintState} fieldHeight={fieldHeight} {...o} />
       ) : (
         <DeferredView id="tilt" s={s as TiltState} {...o} />
       )}
@@ -206,14 +207,30 @@ function SwipeView({ s, orbStroke }: { s: SwipeState } & Orb) {
   );
 }
 
-function FlowView({ s }: { s: FlowState } & Orb) {
-  const pts = s.path.map((i) => cellCenter(i));
+function FlowView({ s, fieldHeight }: { s: FlowState; fieldHeight: number } & Orb) {
+  const center = (i: number) => {
+    const p = cellCenter(i);
+    return { x: p.x, y: (p.y * fieldHeight) / 320 };
+  };
+  const pts = s.path.map(center);
   const pathColor = s.path.length ? FLOW_COLORS[s.grid[s.path[0]]] : colors.white;
   const W = 300 * (s.timeLeft / 45);
+  const burstProgress = 1 - s.burstLeft / 0.4;
   return (
     <>
       <Rect x={10} y={4} width={300} height={4} rx={2} fill={colors.outline} />
       <Rect x={10} y={4} width={Math.max(0, W)} height={4} rx={2} fill={s.timeLeft < 10 ? colors.danger : pathColor} />
+      {pts.length > 1 && (
+        <Polyline
+          points={pts.map((p) => `${p.x},${p.y}`).join(' ')}
+          stroke={pathColor}
+          strokeOpacity={0.18}
+          strokeWidth={20}
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
       {pts.length > 1 && (
         <Polyline
           points={pts.map((p) => `${p.x},${p.y}`).join(' ')}
@@ -225,10 +242,50 @@ function FlowView({ s }: { s: FlowState } & Orb) {
         />
       )}
       {s.grid.map((c, i) => {
-        const p = cellCenter(i);
+        const p = center(i);
         const on = s.path.includes(i) || (s.loop && c === s.grid[s.path[0]]);
-        return <Circle key={i} cx={p.x} cy={p.y} r={on ? 14 : 11} fill={FLOW_COLORS[c]} />;
+        const pop = s.burst.includes(i) ? 1 + Math.sin(burstProgress * Math.PI) * 0.25 : 1;
+        return (
+          <G key={i}>
+            {on && (
+              <Circle
+                cx={p.x}
+                cy={p.y}
+                r={23 + Math.sin(s.timeLeft * 8) * 2}
+                fill={FLOW_COLORS[c]}
+                fillOpacity={0.15}
+              />
+            )}
+            <Circle cx={p.x} cy={p.y} r={(on ? 17 : 14) * pop} fill={FLOW_COLORS[c]} />
+            <Circle cx={p.x - 4} cy={p.y - 4} r={3} fill={colors.white} fillOpacity={0.3} />
+          </G>
+        );
       })}
+      {s.burstLeft > 0 &&
+        s.burst.map((i) => {
+          const p = center(i);
+          return (
+            <G key={`burst${i}`} opacity={1 - burstProgress}>
+              <Circle
+                cx={p.x}
+                cy={p.y}
+                r={18 + burstProgress * 24}
+                stroke={FLOW_COLORS[s.burstColor]}
+                strokeWidth={3 * (1 - burstProgress)}
+                fill="none"
+              />
+              {[0, 1, 2, 3].map((j) => (
+                <Circle
+                  key={j}
+                  cx={p.x + Math.cos((j * Math.PI) / 2 + Math.PI / 4) * burstProgress * 32}
+                  cy={p.y + Math.sin((j * Math.PI) / 2 + Math.PI / 4) * burstProgress * 32}
+                  r={3 * (1 - burstProgress)}
+                  fill={FLOW_COLORS[s.burstColor]}
+                />
+              ))}
+            </G>
+          );
+        })}
     </>
   );
 }
@@ -421,7 +478,7 @@ function StackView({ s, orbFill, orbStroke, orbEmoji, color }: { s: StackState }
   );
 }
 
-function PaintView({ s, orbFill, orbStroke, orbEmoji }: { s: PaintState } & Orb) {
+function PaintView({ s, orbFill, orbStroke, orbEmoji, fieldHeight }: { s: PaintState; fieldHeight: number } & Orb) {
   const N = PAINT.size;
   const c = PAINT.cell;
   // Merge runs of equal cells per row so a full board is a few dozen rects, not a thousand.
@@ -449,29 +506,76 @@ function PaintView({ s, orbFill, orbStroke, orbEmoji }: { s: PaintState } & Orb)
     regions.set(key, region);
   }
   const board = paintBoard(s).slice(0, 3);
+  const me = s.painters[0];
+  const camera = paintCamera(me.x * c + c / 2, me.y * c + c / 2, fieldHeight);
+  const labelY = Math.max(66, Math.min(fieldHeight - 24, (me.y * c + c / 2) * camera.zoom + camera.y - 40));
   return (
     <>
-      {[...regions.entries()].map(([key, region]) => (
-        <Path
-          key={key}
-          d={region.path}
-          fill={colorOf(region.owner)}
-          fillOpacity={region.trail ? 0.45 : region.owner === 0 ? 0.55 : 0.4}
-        />
-      ))}
-      {s.painters.map((p) =>
-        p.alive ? (
-          <SkinDot
-            key={p.id}
-            cx={p.x * c + c / 2}
-            cy={p.y * c + c / 2}
-            r={p.id === 0 ? 8 : 7}
-            fill={colorOf(p.id)}
-            stroke={p.id === 0 ? orbStroke : colors.white}
-            emoji={p.id === 0 ? orbEmoji : p.emoji}
-            strokeWidth={p.id === 0 ? 2.5 : 1}
+      <G transform={`translate(${camera.x} ${camera.y}) scale(${camera.zoom})`}>
+        {[...regions.entries()].map(([key, region]) => (
+          <Path
+            key={key}
+            d={region.path}
+            fill={colorOf(region.owner)}
+            fillOpacity={region.trail ? 0.45 : region.owner === 0 ? 0.55 : 0.4}
           />
-        ) : null,
+        ))}
+        {s.painters.map((p) =>
+          p.alive ? (
+            <SkinDot
+              key={p.id}
+              cx={p.x * c + c / 2}
+              cy={p.y * c + c / 2}
+              r={p.id === 0 ? 8 : 7}
+              fill={colorOf(p.id)}
+              stroke={p.id === 0 ? orbStroke : colors.white}
+              emoji={p.id === 0 ? orbEmoji : p.emoji}
+              strokeWidth={p.id === 0 ? 2.5 : 1}
+            />
+          ) : null,
+        )}
+        {me.alive && (
+          <G>
+            <Circle
+              cx={me.x * c + c / 2}
+              cy={me.y * c + c / 2}
+              r={12}
+              fill="none"
+              stroke={colors.ground}
+              strokeWidth={5}
+            />
+            <Circle
+              cx={me.x * c + c / 2}
+              cy={me.y * c + c / 2}
+              r={12}
+              fill="none"
+              stroke={colors.white}
+              strokeWidth={2}
+            />
+          </G>
+        )}
+      </G>
+      {me.alive && (
+        <G>
+          <Rect
+            x={(me.x * c + c / 2) * camera.zoom + camera.x - 21}
+            y={labelY}
+            width={42}
+            height={20}
+            rx={10}
+            fill={colors.white}
+          />
+          <SvgText
+            x={(me.x * c + c / 2) * camera.zoom + camera.x}
+            y={labelY + 14}
+            textAnchor="middle"
+            fontFamily={fonts.bodyBold}
+            fontSize={11}
+            fill={colors.ground}
+          >
+            YOU
+          </SvgText>
+        </G>
       )}
       <Rect x={200} y={6} width={114} height={52} rx={10} fill={colors.ground} fillOpacity={0.7} />
       {board.map(({ p, pct }, i) => (

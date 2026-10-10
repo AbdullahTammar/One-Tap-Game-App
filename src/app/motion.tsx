@@ -15,6 +15,7 @@ import {
 import { AppText } from '../components/AppText';
 import { PrimaryButton, SecondaryButton } from '../components/Buttons';
 import { MotionArt } from '../components/MotionArt';
+import { motionPoint } from '../game/motion/viewport';
 import { Screen } from '../components/UI';
 import { GameHeader, GameStage, SessionOverlay } from '../components/GameSession';
 import {
@@ -93,6 +94,7 @@ function MotionGame({ meta, seed, stress }: { meta: MotionMeta; seed?: number; s
   useLegacyCounter(id === 'arena' ? 'LegacyArenaScreen' : 'LegacyMotionScreen');
   const gameId = id;
   const [fieldWidth, setFieldWidth] = useState(320);
+  const [fieldHeight, setFieldHeight] = useState(320);
   const playerName = useSettings((s) => s.playerName);
   const named = id === 'arena' || id === 'paint';
   const fresh = useCallback(() => {
@@ -207,7 +209,7 @@ function MotionGame({ meta, seed, stress }: { meta: MotionMeta; seed?: number; s
       send({ type: 'touches', points });
       return;
     }
-    send({ type, x: locationX * scale, y: locationY * scale });
+    send({ type, ...motionPoint(locationX, locationY, fieldWidth, fieldHeight, id === 'flow') });
   };
   const claim = () => current.current.phase === 'running';
   const start = (mode?: DuelState['mode']) => {
@@ -260,11 +262,15 @@ function MotionGame({ meta, seed, stress }: { meta: MotionMeta; seed?: number; s
           />
           <GameStage>
             {({ width, height, size }) => {
-              const fieldSize = id === 'arena' ? width : size;
-              const fieldHeight = id === 'arena' ? height : size;
+              const fullStage = id === 'arena' || id === 'paint' || id === 'flow';
+              const fieldSize = fullStage ? width : size;
+              const fieldHeight = fullStage ? height : size;
               return (
                 <View
-                  onLayout={(e) => setFieldWidth(e.nativeEvent.layout.width)}
+                  onLayout={(e) => {
+                    setFieldWidth(e.nativeEvent.layout.width);
+                    setFieldHeight(e.nativeEvent.layout.height);
+                  }}
                   onStartShouldSetResponder={claim}
                   onMoveShouldSetResponder={claim}
                   onResponderTerminationRequest={() => false}
@@ -295,7 +301,13 @@ function MotionGame({ meta, seed, stress }: { meta: MotionMeta; seed?: number; s
           </GameStage>
           <View style={styles.controls}>
             <AppText variant="caption" style={styles.hint} numberOfLines={2}>
-              {id === 'arena' ? 'Drag to steer · eat smaller dots' : meta.gesture + ' to play'}
+              {id === 'arena'
+                ? 'Drag to steer · eat smaller dots'
+                : id === 'paint'
+                  ? 'YOU = white ring · swipe to turn · return to your land'
+                  : id === 'flow'
+                    ? 'Link matching dots · close a loop for a color clear'
+                    : meta.gesture + ' to play'}
             </AppText>
             {meta.action && (
               <PrimaryButton
